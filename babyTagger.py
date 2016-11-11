@@ -23,7 +23,12 @@ class babyTagger:
 	ambig = {}		# dictionary for ambiguous tokens
 
 	tag_count = {}	# for storing the types of tags we have and their counts
-	babyTagger = 0
+	babyTagger = 0	# just a place holder
+
+	accuracy = 1. 	# for storing the accuracy of our tagger,
+					# in case we want to indicate our trust in the scores given
+					# by the classifier. ASSUME it's 1, we change it iff we
+					# test it
 
 	def __init__(self, token_file, verbose = True):
 		"""
@@ -53,7 +58,7 @@ class babyTagger:
 			for line in rF:
 				i+=1
 				if verbose:
-					print("\tReading token - ", i, end="\r")
+					print("\tReading token -", i, end="\r")
 				line = line.rstrip()
 				l = line.rsplit("\t")
 				# if it's a blank line for whatever reason, SKIP
@@ -116,7 +121,7 @@ class babyTagger:
 				
 		# shuffle the order of the list
 		shuffle(training_set)
-		cross_validation(training_set, k, verbose = verbose)
+		self.accuracy, _ = cross_validation(training_set, k, verbose = verbose)
 
 
 	def quick_tag(self, word):
@@ -166,7 +171,9 @@ class babyTagger:
 			guess = self.babyTagger.prob_classify(addFeatures(word,word))
 			for g in sorted(guess.samples(), key=guess.prob, \
                     reverse=True)[:3]:
-				guess_matrix.append((guess.prob(g), g))
+			## we get the guesses and MULTIPLY by the accuracy of our classifer
+				guess_prob = guess.prob(g) * self.accuracy
+				guess_matrix.append(guess_prob, g)
 			# we'll save the best 3 results   
 			guess_matrix = sorted(guess_matrix, reverse=True)[:3]
             
@@ -184,37 +191,57 @@ class babyTagger:
 		# for holding the best probability guess for the tokens
 		scores = []
 		for w in s:
+			if w == "":
+				continue
 			t = self.quick_tag(w)
 			tagged_s.append(t)
 			scores.append(t[2][0])
 		return tagged_s, numpy.mean(scores)
 
+	def quick_tag_corpus(self, hyCorpora, outfile, total_s = 100, min_w = 8):
+		"""
+		go through a CLEANED corpus file and tag the sentences using the tagger
+
+		"""
+
+		rF = open(hyCorpora, "r")
+		wF = open(outfile, "w")
+
+		i = 0
+		for line in rF:
+			line = line.rstrip()
+			# our function takes a sentence as a list of words...
+			s = line.rsplit(" ")
+			# make sure the sentence is long enough...
+			if len(s) < min_w:
+				continue
+			i += 1
+			# make sure we don't do too many sentences....
+			if i > total_s:
+				break
+			
+			# tag sentence
+			tagged_sentence, mean_score = self.quick_tag_sentence(s)
+
+			for w in tagged_sentence:
+				writeString = w[1]
+				# loop through the tags and their scores
+				for t in w[2]:
+					writeString += "\t" + str(t)
+				wF.write(writeString + "\n")
+			wF.write(str(mean_score) + "\t" + str(len(s)) + "\n\n")
+
+		rF.close()
+		wF.close()
 
 if __name__ == "__main__":
    	babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = babyTagger("50000.EANC.txt")
-   	#babyTag.test_baby_classifier(4)
-   	print(babyTag.quick_tag("բան"))
-   	print(babyTag.quick_tag("համար"))
-   	print(babyTag.quick_tag("ջահանը"))
+   	babyTag.test_baby_classifier(4)
+   	#print(babyTag.quick_tag("բան"))
+   	#print(babyTag.quick_tag("համար"))
+   	#print(babyTag.quick_tag("ջահանը"))
 
    	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-   	
-   	with open("hyWiki_sub.txt") as rF:
-   		i = 0
-   		for s in rF:
-   			s = s.rstrip()
-   			s = s.rsplit(" ")
-   			ts, score = babyTag.quick_tag_sentence(s)
-   			j = 0
-   			for w in ts:
-   				j+=1
-   				#print(i,"\t",w)
-   			print(i, "- Avg. Score ::", score)
-   			i+=1
-   			if i > 20:
-   				break
-   	
-   	
+   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt")
 
-   	
