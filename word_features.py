@@ -5,7 +5,10 @@ def split_tagged_lemma(tagged_lemma):
     takes a tagged lemma - dog_N 
     and returns LEMMA, TAG - dog,N
     """
-    return re.sub("\_.*$","",tagged_lemma), re.sub("^.*\_","", tagged_lemma)
+    # could do this on one line, easier to read this way
+    lemma = re.sub("\_.*$","",tagged_lemma) 
+    tag = re.sub("^.*\_","", tagged_lemma)
+    return lemma, tag 
 
 
 def armConst(c):
@@ -60,7 +63,6 @@ def addFeatures(token, lemma):
         suffix = token[i:]
         root = token[:i]
         feat['suffix-1'] = suffix[-1]
-        #feat['root-1'] = root[-1]
     except:
         suffix = ''
         root = token
@@ -68,7 +70,6 @@ def addFeatures(token, lemma):
     feat['suffix'] = suffix
     feat['root'] = root
 
-    
     # get final letters
     feat['final-1'] = lw[-1]
     feat['final-2'] = lw[-2:]
@@ -109,6 +110,35 @@ def addFeatures(token, lemma):
     
     return feat
 
-    #FIRST ARG - list of all TOKENS with SINGLE POS - UNAMBIGUOUS 
-    # SECOND ARG - list of all TOKENS
+def format_training_data(all_tokens):
+    """
+    we take in a list of tokens with their lemmas and create a list of the TAG and
+    the features for the given token --- use this for training and testing the
+    Naive Bayes classifiers on word-morphology-stuff
 
+    we'll also count the types of tags we get and return that too, nbd
+    """
+    training_set = []
+    tag_set = {}     
+        # put the unambiguous tokens into the right format for the classifier
+    
+    # some tags we DON'T want to train on, because they're closed sets, ie
+    # punctuation or START, END
+    closed_tags = ("START", "END", "PUNC")
+    for token in all_tokens:
+            ##### for continuity, the unambigous dictionary stores LISTS
+            # make sure we do the 0th element of the length 1 list
+        lemma, tag = split_tagged_lemma(all_tokens[token][0]) 
+        if tag in closed_tags:
+            continue
+        # for some reason, some BAD tags exist in EANC and they all are in
+        # all lower so the upper() part sorts that out....
+        features = addFeatures(token, lemma)
+        if tag == tag.upper():
+            training_set.append((features,tag))
+            if tag in tag_set:
+                tag_set[tag] += 1
+            else:
+                tag_set[tag] = 1
+                
+    return training_set, tag_set
