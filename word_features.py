@@ -129,7 +129,7 @@ def format_training_data(all_tokens):
     
     # some tags we DON'T want to train on, because they're closed sets, ie
     # punctuation or START, END
-    closed_tags = ("START", "END", "PUNC")
+    closed_tags = ("START", "END", "PUNC", "CONJ", "N/A")
     for token in all_tokens:
             ##### for continuity, the unambigous dictionary stores LISTS
             # make sure we do the 0th element of the length 1 list
