@@ -36,19 +36,24 @@ def addFeatures(token, lemma):
     w = token
     
     # check to see if word is capitalized (only first letter)
-    feat['capitalized'] = bool(w[0] == bw[0] and not token == bw)
+    try:
+        feat['capitalized'] = bool(w[0] == bw[0] and not token == bw)
+    except:
+        # sometimes, we get weird things passed in that mess up the upper
+        # casing...
+        pass
 
     # if theres a number 0-9 in there, prob a number...
-    feat['has-numeral'] = bool(re.search("[0-9]",lw))
+    feat['has-numeral'] = bool(re.search("[0-9]",w))
     
     # ratio of numerals to other stuff, trying to make sure we catch numbers...
-    feat['numeral-ratio'] = len(re.findall("[0-9]",lw))/len(lw)
+    feat['numeral-ratio'] = len(re.findall("[0-9]",w))/len(w)
     
     # if there is some punctuation in it, prob a punctuation mark...
-    feat['has-punc'] = bool(re.search("[«»՞–—ՙ՚՛՜՝՟]",lw))
+    feat['has-punc'] = bool(re.search("[«»՞–—ՙ՚՛՜՝՟]",w))
 
     # get length
-    #feat['length'] = len(w)    
+    feat['length'] = len(w)    
     
     # get first letters
     feat['first-1'] = lw[0]
@@ -130,6 +135,9 @@ def format_training_data(all_tokens):
             # make sure we do the 0th element of the length 1 list
         lemma, tag = split_tagged_lemma(all_tokens[token][0]) 
         if tag in closed_tags:
+            continue
+        # we don't want to try and classify a word that doesn't exist, do we?
+        if len(token) == 0 or len(lemma) == 0:
             continue
         # for some reason, some BAD tags exist in EANC and they all are in
         # all lower so the upper() part sorts that out....
