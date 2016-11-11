@@ -15,7 +15,7 @@ class hyTagger:
 """
 
 from word_features import *
-
+from babyTagger import *
 
 class babyTagger:
 
@@ -39,8 +39,7 @@ class babyTagger:
 		"""
 		_, self.Unambig, self.ambig, _ = self.read_EANC(token_file, verbose = verbose)
 		self.build_baby_classifier(verbose = verbose)
-
-		
+	
 
 	def read_EANC(self, token_file, verbose = True):
 		"""
@@ -216,7 +215,6 @@ class babyTagger:
 			min_w = 8, verbose = True):
 		"""
 		go through a CLEANED corpus file and tag the sentences using the tagger
-
 		"""
 
 		rF = open(hyCorpora, "r")
@@ -261,16 +259,16 @@ class babyTagger:
 		wF.close()
 
 if __name__ == "__main__":
-   	babyTag = babyTagger("EANC_tokens.txt")
+   	#babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = babyTagger("50000.EANC.txt")
-   	#babyTag.test_baby_classifier(4)
+   	babyTag = c_load("b_tagger.t")
+   	babyTag.test_baby_classifier(4)
    	#print(babyTag.quick_tag("բան"))
    	#print(babyTag.quick_tag("համար"))
    	#print(babyTag.quick_tag("ջահանը"))
 
    	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=0)
-
+   	#babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=0)
+   	#babyTag.save("b_tagger.t")
    	#for t in babyTag.all_tags:
    	#	print(t, babyTag.all_tags[t])
-
