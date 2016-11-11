@@ -30,6 +30,9 @@ class babyTagger:
 					# by the classifier. ASSUME it's 1, we change it iff we
 					# test it
 
+	all_tags = {}	# to see which tags we're actually working on predicting
+					# also, get a count of each tag... maybe for a prior prob
+
 	def __init__(self, token_file, verbose = True):
 		"""
 		create the tagger
@@ -72,28 +75,39 @@ class babyTagger:
 					# if we can't split it, it's because there's nothing, ie no POS
 					tokens[token] = (l[1], [], [])
             	# if there is no token, just skip skip skip
-				tags = re.sub("[\['\]]", "", l[2]).rsplit(",") 
+				lemmas = re.sub("[\['\]]", "", l[2]).rsplit(",") 
 				# here, we get all the tags for the various lemmas associated with the
 				# token         
+				lemma_set = set([])
 				tag_set = set([])
-				for t in tags:
-					if t != "":
-						tag_set.add(t)
+				for l in lemmas:
+					if l != "":
+						# NOTE! we're not adding the tags, we're adding TAGGED lemmas to
+						# the list for each word
+						lemma_set.add(l)
+						# now, we get a list of tags
+						tag = split_tagged_lemma(l)[1]
+						tag_set.add(tag)
+						if tag in self.all_tags:
+							self.all_tags[tag] += 1
+						else:
+							self.all_tags[tag] = 1
 				# now that we've gotten all the tags from the various lemmas,
 				# decide which group to put the token in
 				if len(tag_set) == 0:
 					no_pos[token] = []
 				elif len(tag_set) > 1:
-					ambiguous[token] = list(tag_set)
+					ambiguous[token] = list(lemma_set)
 				else:
-					unique[token] = list(tag_set)
-        # return all lists
+					unique[token] = list(lemma_set)
+			        
 		if verbose:
-			print("\nTotal tokens:", len(tokens))
+			print("\nTotal tokens:", len(tokens), "\tTotal tag types:", len(self.all_tags))
 			print("\tUnambiguous:",len(unique))
 			print("\tAmbiguous:",len(ambiguous))
 			print("\tNo Label:",len(no_pos))
 
+		# return all lists
 		return tokens, unique, ambiguous, no_pos
 
 	def build_baby_classifier(self, verbose = True):
@@ -173,7 +187,7 @@ class babyTagger:
                     reverse=True)[:3]:
 			## we get the guesses and MULTIPLY by the accuracy of our classifer
 				guess_prob = guess.prob(g) * self.accuracy
-				guess_matrix.append(guess_prob, g)
+				guess_matrix.append((guess_prob, g))
 			# we'll save the best 3 results   
 			guess_matrix = sorted(guess_matrix, reverse=True)[:3]
             
@@ -198,7 +212,8 @@ class babyTagger:
 			scores.append(t[2][0])
 		return tagged_s, numpy.mean(scores)
 
-	def quick_tag_corpus(self, hyCorpora, outfile, total_s = 100, min_w = 8):
+	def quick_tag_corpus(self, hyCorpora, outfile, total_s = 100, \
+			min_w = 8, verbose = True):
 		"""
 		go through a CLEANED corpus file and tag the sentences using the tagger
 
@@ -206,6 +221,10 @@ class babyTagger:
 
 		rF = open(hyCorpora, "r")
 		wF = open(outfile, "w")
+
+		if verbose:
+			print("Reading", total_s, "sentences of length", min_w, \
+				"or more from", hyCorpora)
 
 		i = 0
 		for line in rF:
@@ -217,9 +236,11 @@ class babyTagger:
 				continue
 			i += 1
 			# make sure we don't do too many sentences....
-			if i > total_s:
+			# if 0, then do all
+			if i > total_s and total_s != 0:
 				break
-			
+			if verbose:
+				print("Reading sentence #" + str(i), end="\r")
 			# tag sentence
 			tagged_sentence, mean_score = self.quick_tag_sentence(s)
 
@@ -231,17 +252,22 @@ class babyTagger:
 				wF.write(writeString + "\n")
 			wF.write(str(mean_score) + "\t" + str(len(s)) + "\n\n")
 
+		if verbose:
+			print("\nDone reading file. Closing now.")
 		rF.close()
 		wF.close()
 
 if __name__ == "__main__":
    	babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = babyTagger("50000.EANC.txt")
-   	babyTag.test_baby_classifier(4)
+   	#babyTag.test_baby_classifier(4)
    	#print(babyTag.quick_tag("բան"))
    	#print(babyTag.quick_tag("համար"))
    	#print(babyTag.quick_tag("ջահանը"))
 
    	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt")
+   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=20)
+
+   	for t in babyTag.all_tags:
+   		print(t, babyTag.all_tags[t])
 
