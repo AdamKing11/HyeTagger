@@ -8,6 +8,8 @@ class mommaTagger:
 
 
 	mommaTagger = 0
+	accuray = 1.
+
 	tag_trigrams = {} # we hold in counts for each tag trigram
 
 	def __init__(self, tagged_c, verbose = True):
@@ -73,23 +75,76 @@ class mommaTagger:
 		"""
 
 		training_set = []
-
+		if verbose:
+			print("\nNow training Naive Bayesian Classifier on tag trigrams.")
 		for t in self.tag_trigrams:
 			features = {}			# create new dict for the features
-			features['previous'] = t[0]	# set the previous
-			features['following'] = t[2]	# set the following
+			
+			# we find the ratio of this trigram to all other trigrams with
+			# the same context. This way, we weight more frequent trigrams
+			# higher #Bayes #prior
+			
+			# bin the ratios into 20%, 40%, 60%... etc
+			features['previous'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[0]==t[0]])))
+
+			features['following'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[2]==t[2]])))
+
+			features['whole-context'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[0]==t[0] and c[2]==t[2]])))
+
+			
 			training_set.append((features, t[1]))	# we add this to the training set...
 
+		if verbose:
+			print("Training with", len(training_set), "data.")
 		# randomize the order
 		shuffle(training_set)
 
 		self.mommaTagger = nltk.NaiveBayesClassifier.train(training_set)
 
+	def test_momma_classifier(self, k, verbose = True):
+		"""
+		does a quick k-fold test on the classifier we've built... or at least on
+		the features/data we've used to make the classifier....
+		"""
+		training_set = []
+		
+		for t in self.tag_trigrams:
+			features = {}			# create new dict for the features
+			
+			features['previous'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[0]==t[0]])))
+
+			features['following'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[2]==t[2]])))
+
+			features['whole-context'] = round(5 * (self.tag_trigrams[t] \
+				/ sum([self.tag_trigrams[c] for c in self.tag_trigrams \
+				if c[0]==t[0] and c[2]==t[2]])))
+
+			training_set.append((features, t[1]))	# we add this to the training set...
+
+
+		# shuffle the order of the list
+		shuffle(training_set)
+		self.accuracy, _ = cross_validation(training_set, k, verbose = verbose)
+
 
 
 if __name__ == "__main__":
 	momma = mommaTagger("tagged.txt")
+	momma.test_momma_classifier(6)
+	for t in sorted(momma.tag_trigrams, reverse=True):
+		l = sum([momma.tag_trigrams[x] for x in momma.tag_trigrams if x[0]==t[0] and x[2]==t[2]])
+		#print(t, momma.tag_trigrams[t], l)
 	momma.mommaTagger.show_most_informative_features()
-	#for t in momma.tag_trigrams:
-	#	print(t, momma.tag_trigrams[t])
+		
 	#print(len(momma.tag_trigrams))
+
