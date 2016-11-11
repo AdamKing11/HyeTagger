@@ -1,4 +1,4 @@
-import re, sys
+import re, sys, random
 
 def separate_tokens(token_file):
     """
