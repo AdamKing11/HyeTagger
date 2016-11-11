@@ -223,8 +223,11 @@ class babyTagger:
 		wF = open(outfile, "w")
 
 		if verbose:
-			print("Reading", total_s, "sentences of length", min_w, \
-				"or more from", hyCorpora)
+			print("\nNow tagging", hyCorpora)
+			if total_s == 0:
+				print("Reading ALL sentences of length", min_w)
+			else:
+				print("Reading", total_s, "sentences of length", min_w)
 
 		i = 0
 		for line in rF:
@@ -240,7 +243,7 @@ class babyTagger:
 			if i > total_s and total_s != 0:
 				break
 			if verbose:
-				print("Reading sentence #" + str(i), end="\r")
+				print("\tReading sentence #" + str(i), end="\r")
 			# tag sentence
 			tagged_sentence, mean_score = self.quick_tag_sentence(s)
 
@@ -266,8 +269,8 @@ if __name__ == "__main__":
    	#print(babyTag.quick_tag("ջահանը"))
 
    	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=20)
+   	babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=0)
 
-   	for t in babyTag.all_tags:
-   		print(t, babyTag.all_tags[t])
+   	#for t in babyTag.all_tags:
+   	#	print(t, babyTag.all_tags[t])
 
