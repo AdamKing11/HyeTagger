@@ -243,7 +243,7 @@ class babyTagger:
 			if i > total_s and total_s != 0:
 				break
 			if verbose:
-				print("\tReading sentence #" + str(i), end="\r")
+				print("\tReading and tagging sentence #" + str(i), end="\r")
 			# tag sentence
 			tagged_sentence, mean_score = self.quick_tag_sentence(s)
 
