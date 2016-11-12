@@ -15,7 +15,7 @@ class hyTagger:
 """
 
 from word_features import *
-from babyTagger import *
+
 
 class babyTagger:
 
@@ -93,13 +93,13 @@ class babyTagger:
 							self.all_tags[tag] = 1
 				# now that we've gotten all the tags from the various lemmas,
 				# decide which group to put the token in
-				if len(tag_set) == 0:
+				if len(lemma_set) == 0:
 					no_pos[token] = []
-				elif len(tag_set) > 1:
+				elif len(lemma_set) > 1:
 					ambiguous[token] = list(lemma_set)
 				else:
 					unique[token] = list(lemma_set)
-			        
+
 		if verbose:
 			print("\nTotal tokens:", len(tokens), "\tTotal tag types:", len(self.all_tags))
 			print("\tUnambiguous:",len(unique))
@@ -259,16 +259,19 @@ class babyTagger:
 		wF.close()
 
 if __name__ == "__main__":
-   	#babyTag = babyTagger("EANC_tokens.txt")
+   	babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = babyTagger("50000.EANC.txt")
-   	babyTag = c_load("b_tagger.t")
+   	#babyTag = c_load("b_tagger.t")
    	babyTag.test_baby_classifier(4)
+   	c_save(babyTag, "b_tagger.t")
+   	
    	#print(babyTag.quick_tag("բան"))
    	#print(babyTag.quick_tag("համար"))
    	#print(babyTag.quick_tag("ջահանը"))
 
-   	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
+   	s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
+   	s = s.rsplit(" ")
+   	print(babyTag.quick_tag_sentence(s))
    	#babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=0)
-   	#babyTag.save("b_tagger.t")
    	#for t in babyTag.all_tags:
    	#	print(t, babyTag.all_tags[t])
