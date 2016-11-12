@@ -1,4 +1,4 @@
-import re, sys
+import re, sys, pickle
 
 def split_tagged_lemma(tagged_lemma):
     """
@@ -150,3 +150,15 @@ def format_training_data(all_tokens):
                 tag_set[tag] = 1
                 
     return training_set, tag_set
+
+def c_save(t, tagger_file):
+        """
+        saves classifier via pickle
+        """
+        pickle.dump(t, open(tagger_file, "wb" ))
+
+def c_load(tagger_file):
+    """
+    loads a classifier
+    """
+    return pickle.load(open(tagger_file,'rb'))
