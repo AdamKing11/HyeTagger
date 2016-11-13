@@ -47,8 +47,11 @@ def addFeatures(token, lemma):
     feat['has-numeral'] = bool(re.search("[0-9]",w))
     
     # ratio of numerals to other stuff, trying to make sure we catch numbers...
-    feat['numeral-ratio'] = len(re.findall("[0-9]",w))/len(w)
-    
+    try:
+        feat['numeral-ratio'] = len(re.findall("[0-9]",w))/len(w)
+    except:
+        feat['numeral-ratio'] = 0
+        
     # if there is some punctuation in it, prob a punctuation mark...
     feat['has-punc'] = bool(re.search("[«»՞–—ՙ՚՛՜՝՟]",w))
 
