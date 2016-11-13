@@ -31,6 +31,9 @@ class daddyTagger:
 
 	def __init__(self, bt, mt):
 		"""
+		load in the sub-taggers from the other classes
+		1st is based on unambiguous tokens
+		2nd is based off of sentences with ONLY unambigous tokens
 		"""
 		self.babyTagger = bt
 		self.mommaTagger = mt
@@ -128,6 +131,9 @@ class daddyTagger:
 			# if we have fewer than 3 possible tags for a given word, just copy
 			# the last one. because we're summing over all possibilities (#Forward-Backward)
 			# the extra tag will just fall out in the wash... I think :/
+			if len(tags) < 2:
+				print("\n\n\n", w, tags, s)
+
 			if len(tags) < 3:
 				tags.append(tags[1])
 				probs.append(probs[1])
@@ -147,9 +153,9 @@ class daddyTagger:
 			tr = sum([self.mommaTagger.prob_middle((first_tag, next_tag), \
 				this_tag) for next_tag in tag_matrix[1]])
 			prob_matrix[0,i] = em * tr
-
+			
 		# for subsequent tags, we use the sum over the probabilites of the previous TWO tags	
-		for i in range(2,len(s)-2):
+		for i in range(2,len(s)-1):
 			w = s[i]
 			# build list of all possible previous 2 tags
 			pos_prev = [(laster, last) for laster in tag_matrix[i-1] for last in tag_matrix[i-2]]
@@ -171,7 +177,7 @@ class daddyTagger:
 				em = word_tag_dict[(w, this_tag)]
 				tr = sum([self.mommaTagger.prob_middle((last_tag, final_tag), \
 					this_tag) for last_tag in tag_matrix[-2]])
-				prob_matrix[-1,i] = tr * em * prob_matrix[-1,].sum()
+				prob_matrix[-1,i] = tr * em# * prob_matrix[-1,].sum()
 				
 		# okay! now we have a matrix of all possible tag sequences. We just go through the matrix and pick
 		# the best from each column and find the corresponding tag
@@ -179,7 +185,10 @@ class daddyTagger:
 		gap_guess = []
 		for i in range(len(s)-2):
 			guess_index = np.argmax(prob_matrix[i])
-			gap_guess.append((tag_matrix[i][guess_index], prob_matrix[i,guess_index]))
+			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
+			if not np.isnan(reg_confidence):
+				# under the rug.... :/ come back and fix
+				gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
 		return gap_guess
 
 
@@ -192,6 +201,16 @@ if __name__ == "__main__":
 	# make the big one
 	daddy = daddyTagger(b, m)
 
+	running = []
+	goldsX = []
+	goldsY = []
+
+	# for saving our golden boys...
+	with open("golds.X.txt", "w") as wF:
+		pass
+	with open("golds.Y.txt", "w") as wF:
+		pass
+	
 	# let's load in some sentences....
 	with open("hyWiki_sub.txt", "r") as rF:
 		i = 0
@@ -200,12 +219,43 @@ if __name__ == "__main__":
 			s = line.rsplit(" ")
 			if len(s) > 7:
 				i += 1
-				if i > 3:
-					break
-				print(i, line,"\n")
+				if i > 10000:
+					pass	# do them all!!!!
+					#break
 				t, g = daddy.tag(s)
-				print(t,"\n", g, "\n\n")
+				if len(g) > 1:
+					conf = sum(s[1] for s in g)/len(g)
+				else:
+					conf = 1
+				running.append(conf)
+				tagged_s = ""
 
+				for j in range(len(s)):
+					tagged_s += s[j] + "_" + t[j] + " "
+					pass
+				if conf == 1:
+					g_X = s[0]
+					g_Y = t[0]
+					for j in range(1, len(s)):
+						g_X += "\t" + s[j]
+						g_Y += "\t" + t[j]
+					with open("golds.X.txt", "a") as wF:
+						wF.write(g_X + "\n")
+					with open("golds.Y.txt", "a") as wF:
+						wF.write(g_Y + "\n")
+
+
+				tagged_s = tagged_s[0:-1]
+				print(tagged_s)
+				print(len(g), conf, "\n")
+				
+	print("Over", len(running), "sentences, we have a mean confidence of", np.mean(running), \
+		"with a variance of", np.var(running))
+				
+	print(len(golds), "gold sentences in the bunch:\n")
+	for g in golds:
+		#print(g)
+		pass
 	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
 	s = "<s> այս էջի կոդը ։ </s>"
 	s = s.rsplit(" ")
