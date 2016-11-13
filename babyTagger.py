@@ -145,6 +145,9 @@ class babyTagger:
 			if in neither list, use the Bayesian classifier to GUESS and score
 		"""
 		
+		if len(word) == 0:
+			return "N/A"
+
 		tagged_entry = ()
 		# UNAMBIGOUS WORDS
 		if word in self.Unambig:
