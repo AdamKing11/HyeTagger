@@ -10,6 +10,7 @@ class mommaTagger:
 
 	tag_trigrams = {} # we hold in counts for each tag trigram
 
+
 	def __init__(self, tagged_c, verbose = True):
 		"""
 		trains a trigram probability classifier
@@ -69,6 +70,34 @@ class mommaTagger:
 				len(self.tag_trigrams), "trigram types.")
 		return trigrams
 
+
+	def prob_last(self, context, target):
+		"""
+		given the context (previous two tags), what's the probability of the target tag?
+		i.e. given (A, V), what's the probability that we have an N?
+		which is p(N|A,V) / sum(p(TAG|A,V)) for all TAGs
+
+		'context' as tuple
+		'target' as single tag
+
+		"""
+		try:
+			return self.tag_trigrams[(context[0], context[1], target)] / sum([self.tag_trigrams[c] \
+				for c in self.tag_trigrams if c[0] == context[0] and c[1] == context[1]])
+		except:
+			return 0.
+
+	def prob_middle(self, context, target):
+		""" 
+		probability of a tag given it's previous and following tag
+		"""
+		try:
+			return self.tag_trigrams[(context[0], target, context[1])] / sum([self.tag_trigrams[c] \
+				for c in self.tag_trigrams if c[0] == context[0] and c[2] == context[1]])
+		except:
+			return 0.
+
+
 	def quick_tag(self, possible_tags, previous, following, trigram_weight=3):
 		"""
 		given a tag of the previous word and the tag of the following word, based
@@ -124,3 +153,7 @@ if __name__ == "__main__":
 	
 	print(momma.tag_trigrams[("V", "V", "V")], momma.tag_trigrams[("V", "N", "V")])
 	print(momma.quick_tag(("N","V"),"V","V"))
+
+	print(momma.tag_trigrams[("N", "V", "V")])
+	print(momma.tag_trigrams[("N", "V", "V")] / sum([momma.tag_trigrams[c] for c in momma.tag_trigrams if c[0] =="N" and c[1] == "V"]))
+	print(momma.prob_last(("N","V"),"V"))
