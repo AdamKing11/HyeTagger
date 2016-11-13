@@ -109,7 +109,7 @@ class daddyTagger:
 		""" 
 		# get the first and last tag of the sentence part
 		first_tag = self.babyTagger.quick_tag(s[0])[2][1]
-		last_tag = self.babyTagger.quick_tag(s[-1])[2][1]
+		final_tag = self.babyTagger.quick_tag(s[-1])[2][1]
 		
 		word_tag_dict = {}	# probability of a TAG given a word
 		# ie word_tag_dict[("dog", "N")] = .4 if there's a .4 chance dog is a noun
@@ -144,20 +144,34 @@ class daddyTagger:
 			# EMission... chance that a given word is that tag
 			em = word_tag_dict[(w, this_tag)]
 			# TRansition... sum of all chances that this is the tag, given possible starts and 3rd states
-			tr = sum([self.mommaTagger.prob_middle((first_tag, next_tag), this_tag) for next_tag in tag_matrix[1]])
+			tr = sum([self.mommaTagger.prob_middle((first_tag, next_tag), \
+				this_tag) for next_tag in tag_matrix[1]])
 			prob_matrix[0,i] = em * tr
 
 		# for subsequent tags, we use the sum over the probabilites of the previous TWO tags	
-		for i in range(2,len(s)-1):
+		for i in range(2,len(s)-2):
 			w = s[i]
 			# build list of all possible previous 2 tags
 			pos_prev = [(laster, last) for laster in tag_matrix[i-1] for last in tag_matrix[i-2]]
 			for j in range(3):
 				this_tag = tag_matrix[i][j]
 				em = word_tag_dict[(w, this_tag)]
-				tr = self.mommaTagger.prob_last(pos_prev[j], this_tag)
+				#tr = self.mommaTagger.prob_last(pos_prev[j], this_tag)
+				tr = sum([self.mommaTagger.prob_last(pp, this_tag) for pp in pos_prev])
+
 				# i-1 because the tag_matrix is 1 bigger than the prob_matrix.....
-				prob_matrix[i-1,j] = tr * em * prob_matrix[i-2,].sum()
+				prob_matrix[i-1,j] = tr * em# * prob_matrix[i-2,].sum()
+				
+		# for the last tag of the gap, we will go back to predicting the middle 
+		# tag based off of the previous guesses and the final tag (which is certain)
+		if len(s) >= 3:
+			for i in range(3):
+				w = s[-2]
+				this_tag = tag_matrix[-1][i]
+				em = word_tag_dict[(w, this_tag)]
+				tr = sum([self.mommaTagger.prob_middle((last_tag, final_tag), \
+					this_tag) for last_tag in tag_matrix[-2]])
+				prob_matrix[-1,i] = tr * em * prob_matrix[-1,].sum()
 				
 		# okay! now we have a matrix of all possible tag sequences. We just go through the matrix and pick
 		# the best from each column and find the corresponding tag
@@ -193,9 +207,14 @@ if __name__ == "__main__":
 				print(t,"\n", g, "\n\n")
 
 	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-	#s = s.rsplit(" ")
+	s = "<s> այս էջի կոդը ։ </s>"
+	s = s.rsplit(" ")
 	#print(s, "\n")
 	#t,_ = daddy.tag(s)
 	#print(t)
-	
-	
+	#print(daddy.mommaTagger.prob_last(("N", "N"), "N"))
+	#print(daddy.mommaTagger.prob_last(("N", "V"), "N"))
+	#print(daddy.mommaTagger.prob_middle(("N", "N"), "N"))
+	#print(daddy.mommaTagger.prob_middle(("N", "N"), "V"))
+	#print(daddy.mommaTagger.tag_trigrams[("N","N", "N")])
+	#print(daddy.mommaTagger.tag_trigrams[("N","V", "N")])
