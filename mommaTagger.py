@@ -6,8 +6,6 @@ from lib.bclass_cross import *
 
 class mommaTagger:
 
-	accuray = 1.
-
 	tag_trigrams = {} # we hold in counts for each tag trigram
 
 	all_tags = set([])
@@ -155,21 +153,20 @@ class mommaTagger:
 
 
 if __name__ == "__main__":
-	#momma = mommaTagger("tagged.txt")
-	#momma.test_momma_classifier(6)
+	momma = mommaTagger("tagged.wiki.txt")
 	#momma.mommaTagger.show_most_informative_features()
 	
-	#c_save(momma, "taggers/m_tagger.t")
-	momma = c_load("taggers/m_tagger.t")
+	c_save(momma, "taggers/m_tagger.t")
+	#momma = c_load("taggers/m_tagger.t")
 
 	
+	"""
 	print("V\t\tN")
 	print(momma.tag_trigrams[("A", "V", "A")], momma.tag_trigrams[("A", "N", "A")])
 	print(momma.mid_prob[("A", "V", "A")], momma.mid_prob[("A", "N", "A")])
 	print(momma.mid_prob[("N", "N", "N")])
 	print(momma.quick_tag(("N","V"),"A","A"))
 	
-	"""
 	print(momma.tag_trigrams[("N", "V", "A")], momma.tag_trigrams[("N", "N", "A")])
 	print(momma.quick_tag(("N","V"),"N","A"))
 	
