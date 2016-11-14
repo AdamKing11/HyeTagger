@@ -1,6 +1,5 @@
 import re, sys, nltk
 from random import shuffle
-from bclass_cross import *
 """
 Armenian POS Tagger
 Adam King 2016 University of Arizona
@@ -14,7 +13,8 @@ class hyTagger:
 
 """
 
-from word_features import *
+from lib.word_features import *
+from lib.bclass_cross import *
 
 
 class babyTagger:
@@ -266,7 +266,7 @@ if __name__ == "__main__":
    	#babyTag = babyTagger("50000.EANC.txt")
    	#babyTag = c_load("b_tagger.t")
    	babyTag.test_baby_classifier(4)
-   	c_save(babyTag, "b_tagger.t")
+   	c_save(babyTag, "taggers/b_tagger.t")
    	
    	#print(babyTag.quick_tag("բան"))
    	#print(babyTag.quick_tag("համար"))
