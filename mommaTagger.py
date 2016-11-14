@@ -1,14 +1,20 @@
 import re, sys, nltk
 from random import shuffle
-from bclass_cross import *
 
-from word_features import *
+from lib.word_features import *
+from lib.bclass_cross import *
 
 class mommaTagger:
 
 	accuray = 1.
 
 	tag_trigrams = {} # we hold in counts for each tag trigram
+
+	all_tags = set([])
+
+	mid_prob = {}	# a dict for holding the probabilities of a given tag
+					# given the tags to the left and right
+					# key formet = ((PREV, FOLLOWING), TAG)
 
 
 	def __init__(self, tagged_c, verbose = True):
@@ -17,7 +23,8 @@ class mommaTagger:
 		we load in the tagged corpus from the babyTagger file
 		and use that to calculate trigram probabilites for tags
 		"""
-		self.tag_trigrams = self.read_tag_trigrams(tagged_c)
+		self.tag_trigrams, self.all_tags = self.read_tag_trigrams(tagged_c)
+		self.mid_prob = self.build_mp_dict()
 		
 	def read_tag_trigrams(self, baby_tagged_file, threshold = 1., verbose = True):
 		"""
@@ -25,6 +32,7 @@ class mommaTagger:
 		trigrams where ALL tokens in the trigram beat our threshold
 		(default 1, so we only do unambiguous tokens)
 		"""
+		all_tags = set([])
 		trigrams = {}
 		i, j = 1, 0
 		with open(baby_tagged_file, "r") as rF:
@@ -51,6 +59,8 @@ class mommaTagger:
 				# if this tokens score beats our threshold, put it on the list
 				if float(l[1]) >= threshold:
 					tag_history.append((l[2], float(l[1])))
+					# and we'll add it to the list of all tags...
+					all_tags.add(l[2])
 				else:
 					# however, if the score is too low, we re-start the list 
 					# and continue
@@ -67,8 +77,8 @@ class mommaTagger:
 					tag_history.pop(0)
 		if verbose:
 			print("\nRead in", i-1, "sentences and found", j, "trigrams with", \
-				len(self.tag_trigrams), "trigram types.")
-		return trigrams
+				len(trigrams), "trigram types.")
+		return trigrams, all_tags
 
 
 	def prob_last(self, context, target):
@@ -97,6 +107,16 @@ class mommaTagger:
 		except:
 			return 0.
 
+	def build_mp_dict(self):
+		"""
+		just calculate the probabilities of a TAG given what comes before and after once at the beginning
+		then we save it in a dictionary so it's faster!
+		"""
+		pd = {}
+		pos_tri = [(x, y, z) for x in self.all_tags for y in self.all_tags for z in self.all_tags]
+		for p in pos_tri:
+			pd[p] = self.prob_middle((p[0], p[2]), p[1])
+		return pd
 
 	def quick_tag(self, possible_tags, previous, following, trigram_weight=3):
 		"""
@@ -139,12 +159,17 @@ if __name__ == "__main__":
 	#momma.test_momma_classifier(6)
 	#momma.mommaTagger.show_most_informative_features()
 	
-	#c_save(momma, "m_tagger.t")
-	momma = c_load("m_tagger.t")
+	#c_save(momma, "taggers/m_tagger.t")
+	momma = c_load("taggers/m_tagger.t")
+
+	
 	print("V\t\tN")
 	print(momma.tag_trigrams[("A", "V", "A")], momma.tag_trigrams[("A", "N", "A")])
+	print(momma.mid_prob[("A", "V", "A")], momma.mid_prob[("A", "N", "A")])
+	print(momma.mid_prob[("N", "N", "N")])
 	print(momma.quick_tag(("N","V"),"A","A"))
 	
+	"""
 	print(momma.tag_trigrams[("N", "V", "A")], momma.tag_trigrams[("N", "N", "A")])
 	print(momma.quick_tag(("N","V"),"N","A"))
 	
@@ -157,3 +182,4 @@ if __name__ == "__main__":
 	print(momma.tag_trigrams[("N", "V", "V")])
 	print(momma.tag_trigrams[("N", "V", "V")] / sum([momma.tag_trigrams[c] for c in momma.tag_trigrams if c[0] =="N" and c[1] == "V"]))
 	print(momma.prob_last(("N","V"),"V"))
+	"""
