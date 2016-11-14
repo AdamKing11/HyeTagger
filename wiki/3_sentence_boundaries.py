@@ -17,6 +17,8 @@ if __name__ == "__main__":
         # actual text
         if re.search("\$[0-9]", line):
         	continue
+        # also, get rid of any double spaces.....
+        line = re.sub(" +", " ", line)
         wF.write("<s> " + line + " </s>\n")
 
     rF.close()
