@@ -264,7 +264,7 @@ class babyTagger:
 if __name__ == "__main__":
    	babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = babyTagger("50000.EANC.txt")
-   	#babyTag = c_load("b_tagger.t")
+   	#babyTag = c_load("taggers/b_tagger.t")
    	babyTag.test_baby_classifier(4)
    	c_save(babyTag, "taggers/b_tagger.t")
    	
@@ -272,9 +272,10 @@ if __name__ == "__main__":
    	#print(babyTag.quick_tag("համար"))
    	#print(babyTag.quick_tag("ջահանը"))
 
-   	s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-   	s = s.rsplit(" ")
-   	print(babyTag.quick_tag_sentence(s))
-   	#babyTag.quick_tag_corpus("hyWiki_sub.txt", "tagged.txt", total_s=0)
+   	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
+   	#s = s.rsplit(" ")
+   	#print(babyTag.quick_tag_sentence(s))
+   	babyTag.quick_tag_corpus("hyWiki.READY.txt", "tagged.wiki.txt", total_s=0)
    	#for t in babyTag.all_tags:
    	#	print(t, babyTag.all_tags[t])
+
