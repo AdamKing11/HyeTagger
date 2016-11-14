@@ -1,7 +1,6 @@
 import re, sys, nltk
 import numpy as np
 from random import shuffle
-from bclass_cross import *
 
 """
 	one tagger to rule them all!
@@ -20,7 +19,9 @@ from bclass_cross import *
 		(baby) and ALSO use contextual probs
 	"""
 
-from word_features import *
+#from lib import word_features, bclass_cross
+from lib.word_features import *
+from lib.bclass_cross import *
 from babyTagger import *
 from mommaTagger import *
 
@@ -46,6 +47,9 @@ class daddyTagger:
 			(i.e. tag trigams) information to help break ties for ambiguous tokens
 			then we do the same for totally novel words
 		"""
+		
+		# get rid of any blank words we may have been given....
+		s = [w for w in s if w != ""]
 		# build an empty list of length s
 		tagged = ["" for _ in s]
 	
@@ -100,6 +104,80 @@ class daddyTagger:
 
 		return tagged, guess_info
 
+	def gap_fill2(self, s, threshold = .9):
+		"""
+		"""
+		first_tag = self.babyTagger.quick_tag(s[0])[2][1]
+		final_tag = self.babyTagger.quick_tag(s[-1])[2][1]
+		
+		# dictionary for storing the probability a given word has a particular tag
+		# because we're going to be copying some tags for a given word, this will be 1/3
+		# for ambiguous and unambiguous tokens to indicate that any tag is possible
+		word_tag_dict = {}
+		
+		prob_matrix = numpy.zeros((len(s),3))
+		tag_matrix = []
+
+		for i in range(len(s)):
+			w = s[i]
+			
+			pos_tags = self.babyTagger.quick_tag(w)[2]
+			probs = [pos_tags[k] for k in np.arange(0,len(pos_tags),2)]
+			tags = [pos_tags[k] for k in np.arange(1,len(pos_tags),2)]
+
+			print("\t", w, tags)
+			if len(tags) == 1:	
+				# if it's an unambigous word, ie the first and last
+				# we just copy the SINGLE tag 3 times
+				tag_matrix.append([tags[0] for _ in range(3)])
+				word_tag_dict[(w, tags[0])] = 1./3
+			elif len(tags) == 2:
+				# if it's an ambiguous token with 2 tags, just copy the last one
+				tag_matrix.append([tags[0], tags[1], tags[1]])
+				word_tag_dict[(w, tags[0])] = 1./3
+				word_tag_dict[(w, tags[1])] = 1./3
+			else:
+				tag_matrix.append(tags)
+				for j in range(3):
+					word_tag_dict[(w, tags[j])] = probs[j]
+
+		for i in range(1,len(s)-1):
+			w = s[i]
+			# get all possible tags for previous and following 
+			pos_prev = tag_matrix[i-1]
+			pos_next = tag_matrix[i+1]
+			pos_contexts = [(p, n) for p in pos_prev for n in pos_next]
+
+			for j in range(3):
+				# we sum over the probabilities for ALL possible contexts (previous and following
+				#	tags given the current POSSIBLE tag)
+				tag = tag_matrix[i][j]
+				# get the sum of the probabilities that we have this tag for all contexts....
+				# since we're going to regularize it later, no need to get avg....
+				tr = sum([word_tag_dict[(s[i-1]), c[0]] * word_tag_dict[(s[i+1]), c[1]] * \
+					self.mommaTagger.mid_prob[(c[0], tag, c[1])] for c in pos_contexts])
+				# hella complicated - go get the probability of a tag, we SUM the probabilities of
+				# the trigrams TIMES the probability of the the tags of the context words (previous
+				# and following) given the word
+				# so, probability we get T2 for W2: "w1_t1 W2_T2 w3_t3"  is: p(t1|w1) * p(t3|w3) * 
+				# p(t1,T2,t3) for all possible w/t combinations for both sides
+				em = word_tag_dict[(w,tag)]
+				prob_matrix[i,j] = em*tr
+
+			# now we normalize the probs...
+			for j in range(3):
+				prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i].sum() 
+
+		gap_guess = []
+		for i in range(1,len(s)-1):
+			guess_index = np.argmax(prob_matrix[i])
+			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
+			gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
+		return gap_guess
+
+		
+
+
 	def gap_fill(self, s, threshold = .9):
 		"""
 		all right! going to use a quasi-Forward-Backward algorithm to find the best sequence
@@ -132,7 +210,7 @@ class daddyTagger:
 			# the last one. because we're summing over all possibilities (#Forward-Backward)
 			# the extra tag will just fall out in the wash... I think :/
 			if len(tags) < 2:
-				print("\n\n\n", w, tags, s)
+				pass
 
 			if len(tags) < 3:
 				tags.append(tags[1])
@@ -166,7 +244,7 @@ class daddyTagger:
 				tr = sum([self.mommaTagger.prob_last(pp, this_tag) for pp in pos_prev])
 
 				# i-1 because the tag_matrix is 1 bigger than the prob_matrix.....
-				prob_matrix[i-1,j] = tr * em# * prob_matrix[i-2,].sum()
+				prob_matrix[i-1,j] = tr * em
 				
 		# for the last tag of the gap, we will go back to predicting the middle 
 		# tag based off of the previous guesses and the final tag (which is certain)
@@ -192,23 +270,32 @@ class daddyTagger:
 		return gap_guess
 
 
-	
-
 if __name__ == "__main__":
 	# load the 2 sub-taggers
-	b = c_load("b_tagger.t")
-	m = c_load("m_tagger.t")
+	b = c_load("taggers/b_tagger.t")
+	m = c_load("taggers/m_tagger.t")
 	# make the big one
 	daddy = daddyTagger(b, m)
+
+	s = "<s> Դուք կարող եք դիտել կամ պատճենել այս էջի կոդը ։ </s>"
+	#s = "<s> Դուք կարող եք"
+	s = s.rsplit(" ")
+	z, g = daddy.tag(s)
+	for i in range(len(s)):
+		print(s[i] + "_" + z[i], end = " ")
+	print()
+	print(g)
+	
+"""
 
 	running = []
 	goldsX = []
 	goldsY = []
 
 	# for saving our golden boys...
-	with open("golds.X.txt", "w") as wF:
+	with open("golds/golds.X.txt", "w") as wF:
 		pass
-	with open("golds.Y.txt", "w") as wF:
+	with open("golds/golds.Y.txt", "w") as wF:
 		pass
 	
 	# let's load in some sentences....
@@ -246,25 +333,12 @@ if __name__ == "__main__":
 
 
 				tagged_s = tagged_s[0:-1]
-				print(tagged_s)
-				print(len(g), conf, "\n")
+				print(i, end="\r")
+				#print(tagged_s)
+				#print(len(g), conf, "\n")
 				
 	print("Over", len(running), "sentences, we have a mean confidence of", np.mean(running), \
 		"with a variance of", np.var(running))
 				
 	print(len(golds), "gold sentences in the bunch:\n")
-	for g in golds:
-		#print(g)
-		pass
-	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
-	s = "<s> այս էջի կոդը ։ </s>"
-	s = s.rsplit(" ")
-	#print(s, "\n")
-	#t,_ = daddy.tag(s)
-	#print(t)
-	#print(daddy.mommaTagger.prob_last(("N", "N"), "N"))
-	#print(daddy.mommaTagger.prob_last(("N", "V"), "N"))
-	#print(daddy.mommaTagger.prob_middle(("N", "N"), "N"))
-	#print(daddy.mommaTagger.prob_middle(("N", "N"), "V"))
-	#print(daddy.mommaTagger.tag_trigrams[("N","N", "N")])
-	#print(daddy.mommaTagger.tag_trigrams[("N","V", "N")])
+	"""
