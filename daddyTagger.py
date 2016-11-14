@@ -104,8 +104,15 @@ class daddyTagger:
 
 		return tagged, guess_info
 
-	def gap_fill2(self, s, threshold = .9):
+	def gap_fill(self, s, threshold = .9):
 		"""
+		a means of finding the best fit of tags for an unknown sequence
+		we start with KNOWING the first and last word/tag pair (but we could always do
+		it with unknowns...) and then find the highest prob sequence of tags for the given
+		words
+
+		we do this via the product of the probability of a tag|word (from the morphological
+		Bayesian classifier) and the SUM over all tag trigrams that COULD make up a tag sequence
 		"""
 		first_tag = self.babyTagger.quick_tag(s[0])[2][1]
 		final_tag = self.babyTagger.quick_tag(s[-1])[2][1]
@@ -175,100 +182,7 @@ class daddyTagger:
 			gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
 		return gap_guess
 
-		
-
-
-	def gap_fill(self, s, threshold = .9):
-		"""
-		all right! going to use a quasi-Forward-Backward algorithm to find the best sequence
-		of tags GIVEN a definite, known tag at the beginning and at the end
-		That is, we know T_1 and T_4, so we need to find the best T_2 and T_3 to make a good
-		sequence
-
-		We're going to use the trigram probabilities of tag sequences from our unambiguously 
-		tagged sentences
-		""" 
-		# get the first and last tag of the sentence part
-		first_tag = self.babyTagger.quick_tag(s[0])[2][1]
-		final_tag = self.babyTagger.quick_tag(s[-1])[2][1]
-		
-		word_tag_dict = {}	# probability of a TAG given a word
-		# ie word_tag_dict[("dog", "N")] = .4 if there's a .4 chance dog is a noun
-
-		# we put the first and last tags as identical lists of 3, so the matrix will
-		# always be of stable dimensions
-		prob_matrix = numpy.zeros((len(s)-2,3))
-		tag_matrix = [[first_tag for _ in range(3)]]
-		# first, make matrix of all possible tags....
-		for i in range(len(s)-2):
-			w = s[i+1]
-			
-			pos_tags = self.babyTagger.quick_tag(w)[2]
-			probs = [pos_tags[k] for k in np.arange(0,len(pos_tags),2)]
-			tags = [pos_tags[k] for k in np.arange(1,len(pos_tags),2)]
-			# if we have fewer than 3 possible tags for a given word, just copy
-			# the last one. because we're summing over all possibilities (#Forward-Backward)
-			# the extra tag will just fall out in the wash... I think :/
-			if len(tags) < 2:
-				pass
-
-			if len(tags) < 3:
-				tags.append(tags[1])
-				probs.append(probs[1])
-			tag_matrix.append(tags)
-			for j in range(3):
-				word_tag_dict[(w,tags[j])] = probs[j]
-			
-		# for the first unknown, we use the MIDDLE trigram probs given the unambiguous first tag,
-		# and the sum over all possible following tags
-		for i in range(3):
-			# just so I know what the variables are....
-			w = s[1]
-			this_tag = tag_matrix[1][i]
-			# EMission... chance that a given word is that tag
-			em = word_tag_dict[(w, this_tag)]
-			# TRansition... sum of all chances that this is the tag, given possible starts and 3rd states
-			tr = sum([self.mommaTagger.prob_middle((first_tag, next_tag), \
-				this_tag) for next_tag in tag_matrix[1]])
-			prob_matrix[0,i] = em * tr
-			
-		# for subsequent tags, we use the sum over the probabilites of the previous TWO tags	
-		for i in range(2,len(s)-1):
-			w = s[i]
-			# build list of all possible previous 2 tags
-			pos_prev = [(laster, last) for laster in tag_matrix[i-1] for last in tag_matrix[i-2]]
-			for j in range(3):
-				this_tag = tag_matrix[i][j]
-				em = word_tag_dict[(w, this_tag)]
-				#tr = self.mommaTagger.prob_last(pos_prev[j], this_tag)
-				tr = sum([self.mommaTagger.prob_last(pp, this_tag) for pp in pos_prev])
-
-				# i-1 because the tag_matrix is 1 bigger than the prob_matrix.....
-				prob_matrix[i-1,j] = tr * em
-				
-		# for the last tag of the gap, we will go back to predicting the middle 
-		# tag based off of the previous guesses and the final tag (which is certain)
-		if len(s) >= 3:
-			for i in range(3):
-				w = s[-2]
-				this_tag = tag_matrix[-1][i]
-				em = word_tag_dict[(w, this_tag)]
-				tr = sum([self.mommaTagger.prob_middle((last_tag, final_tag), \
-					this_tag) for last_tag in tag_matrix[-2]])
-				prob_matrix[-1,i] = tr * em# * prob_matrix[-1,].sum()
-				
-		# okay! now we have a matrix of all possible tag sequences. We just go through the matrix and pick
-		# the best from each column and find the corresponding tag
-		tag_matrix = tag_matrix[1:]
-		gap_guess = []
-		for i in range(len(s)-2):
-			guess_index = np.argmax(prob_matrix[i])
-			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
-			if not np.isnan(reg_confidence):
-				# under the rug.... :/ come back and fix
-				gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
-		return gap_guess
-
+	
 
 if __name__ == "__main__":
 	# load the 2 sub-taggers
@@ -276,6 +190,7 @@ if __name__ == "__main__":
 	m = c_load("taggers/m_tagger.t")
 	# make the big one
 	daddy = daddyTagger(b, m)
+	c_save("taggers/d_tagger.t")
 
 	s = "<s> Դուք կարող եք դիտել կամ պատճենել այս էջի կոդը ։ </s>"
 	#s = "<s> Դուք կարող եք"
