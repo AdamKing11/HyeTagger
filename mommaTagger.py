@@ -3,11 +3,13 @@ from random import shuffle
 
 from lib.word_features import *
 from lib.bclass_cross import *
+from lib.test_eval import *
 
 class mommaTagger:
 
 	tag_trigrams = {} # we hold in counts for each tag trigram
 
+	total_trigrams = 0	# for ALL trigrams we've seen
 	all_tags = set([])
 
 	mid_prob = {}	# a dict for holding the probabilities of a given tag
@@ -23,7 +25,32 @@ class mommaTagger:
 		"""
 		self.tag_trigrams, self.all_tags = self.read_tag_trigrams(tagged_c)
 		self.mid_prob = self.build_mp_dict()
+		self.total_trigrams = self.count_all_trigrams()
+	
+	def forget(self, trigrams_to_f, verbose = True):
+		"""
+		take in a dictionary of trigrams and "forget" seeing them, ie remove them
+		from our counts of trigrams
+		"""
+		total_forgotten = 0
 		
+		if verbose:
+			print("Starting with", self.total_trigrams, "total trigrams.")
+			print("Now **forgetting** trigrams across", len(trigrams_to_f), "trigram types.")
+		for t in trigrams_to_f:
+			if t in self.tag_trigrams:
+				self.tag_trigrams[t] -= trigrams_to_f[t]
+				total_forgotten += trigrams_to_f[t]
+
+		if verbose:
+			print("\t",total_forgotten, "total forgotten.")
+			print("Using", len(self.tag_trigrams), "to calculate probabilities....")
+		self.mid_prob = self.build_mp_dict()	
+		self.total_trigrams = self.count_all_trigrams()
+		if verbose:
+			print("Done. We now have", self.total_trigrams, "across", \
+				len(self.tag_trigrams), "types.")
+
 	def read_tag_trigrams(self, baby_tagged_file, threshold = 1., verbose = True):
 		"""
 		read in a file tagged by the baby tagger and get all tag
@@ -78,23 +105,6 @@ class mommaTagger:
 				len(trigrams), "trigram types.")
 		return trigrams, all_tags
 
-
-	def prob_last(self, context, target):
-		"""
-		given the context (previous two tags), what's the probability of the target tag?
-		i.e. given (A, V), what's the probability that we have an N?
-		which is p(N|A,V) / sum(p(TAG|A,V)) for all TAGs
-
-		'context' as tuple
-		'target' as single tag
-
-		"""
-		try:
-			return self.tag_trigrams[(context[0], context[1], target)] / sum([self.tag_trigrams[c] \
-				for c in self.tag_trigrams if c[0] == context[0] and c[1] == context[1]])
-		except:
-			return 0.
-
 	def prob_middle(self, context, target):
 		""" 
 		probability of a tag given it's previous and following tag
@@ -114,50 +124,30 @@ class mommaTagger:
 		pos_tri = [(x, y, z) for x in self.all_tags for y in self.all_tags for z in self.all_tags]
 		for p in pos_tri:
 			pd[p] = self.prob_middle((p[0], p[2]), p[1])
+
 		return pd
 
-	def quick_tag(self, possible_tags, previous, following, trigram_weight=3):
+	def count_all_trigrams(self):
 		"""
-		given a tag of the previous word and the tag of the following word, based
-		on what we've seen, we return the most likely tag for target word
-
-		MAYBE implement EM in future versions?
+		goes through all trigram types and finds how many of each we have and returns sum
 		"""
-		tag_probabilities = {}
-		for p in possible_tags:
-			# probability of current tag given previous
-			# which is the SUM of all trigrams where the FIRST TWO are the same,
-			# divided by all trigrams where the FIRST one is the same
-			forward = sum([self.tag_trigrams[c] for c in self.tag_trigrams \
-				if c[0] == previous and c[1] == p]) / sum([self.tag_trigrams[c] \
-				for c in self.tag_trigrams if c[0] == previous])
-			# probability of current tag given the following tag
-			# SUM of all trigrams where LAST TWO are same, divided by sum where
-			# LAST one is same
-			backward = sum([self.tag_trigrams[c] for c in self.tag_trigrams \
-				if c[2] == following and c[1] == p]) / sum([self.tag_trigrams[c] \
-				for c in self.tag_trigrams if c[2] == following])
-
-			whole_context = self.tag_trigrams[(previous,p,following)] / \
-				sum([self.tag_trigrams[c] for c in 	self.tag_trigrams if \
-				c[0] == previous and c[2] == following])
-
-			# now we take all 3 calculated probabilites and normalize them
-			# we also weight the trigram probability HIGHER than the bigrams
-			combined_prob = (forward + backward + \
-				(whole_context * trigram_weight)) / (2 + trigram_weight)
-			tag_probabilities[p] = combined_prob
-
-		return tag_probabilities
-
+		tc = 0
+		for t in self.tag_trigrams:
+			tc += self.tag_trigrams[t]
+		return tc
 
 
 if __name__ == "__main__":
-	momma = mommaTagger("tagged.wiki.txt")
-	#momma.mommaTagger.show_most_informative_features()
+	#momma = mommaTagger("tagged.wiki.txt")
 	
-	c_save(momma, "taggers/m_tagger.t")
-	#momma = c_load("taggers/m_tagger.t")
+	#c_save(momma, "taggers/m_tagger.t")
+	momma = c_load("taggers/m_tagger.t")
+	
+	train, test = split_corpus("EANC.golds.txt")
+	trigrams_to_f = count_trigrams(test)
+
+	momma.forget(trigrams_to_f)
+
 
 	
 	"""
