@@ -41,7 +41,7 @@ class babyTagger:
 		self.build_baby_classifier(verbose = verbose)
 	
 
-	def read_EANC(self, token_file, verbose = True):
+	def read_EANC(self, token_file, verbose = True, fc = True):
 		"""
     Reads in a list of tokens we've culled from EANC and returns a list of:
     TOKEN[token] - (unigram_count, TAGS, DEFS)
@@ -67,7 +67,10 @@ class babyTagger:
 				if l[0] == "":
 					continue
             	# the token in question is first thing on line... duh
-				token = l[0]
+				if fc:
+					token = l[0].lower()
+				else:
+					token = l[0]
 				try:
 					tokens[token] = (l[1], l[2], l[3])
 				except:
@@ -263,9 +266,10 @@ class babyTagger:
 
 if __name__ == "__main__":
    	babyTag = babyTagger("EANC_tokens.txt")
-   	#babyTag = babyTagger("50000.EANC.txt")
    	#babyTag = c_load("taggers/b_tagger.t")
-   	babyTag.test_baby_classifier(4)
+   	#babyTag.test_baby_classifier(4)
+   	#print(babyTag.all_tags)
+   	
    	c_save(babyTag, "taggers/b_tagger.t")
    	
    	#print(babyTag.quick_tag("բան"))
@@ -275,7 +279,7 @@ if __name__ == "__main__":
    	#s = "<s> Դուք պետք է հավաստեք , որ ձեր ներլցած ֆայլը ոչ մի հեղինակային իրավունք չի խախտում ։ </s>"
    	#s = s.rsplit(" ")
    	#print(babyTag.quick_tag_sentence(s))
-   	babyTag.quick_tag_corpus("hyWiki.READY.txt", "tagged.wiki.txt", total_s=0)
+   	#babyTag.quick_tag_corpus("hyWiki.READY.txt", "tagged.wiki.txt", total_s=0)
    	#for t in babyTag.all_tags:
    	#	print(t, babyTag.all_tags[t])
 
