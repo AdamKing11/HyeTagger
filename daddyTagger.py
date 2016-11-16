@@ -22,6 +22,7 @@ from random import shuffle
 #from lib import word_features, bclass_cross
 from lib.word_features import *
 from lib.bclass_cross import *
+from lib.test_eval import *
 from babyTagger import *
 from mommaTagger import *
 
@@ -43,8 +44,7 @@ class daddyTagger:
 		"""
 		display information about the taggers
 		"""
-		mtc = sum(self.mommaTagger.tag_trigrams[t] for t in self.mommaTagger.tag_trigrams)
-
+		
 		print("Baby Tagger:")
 		print("\tAccuracy:", self.babyTagger.accuracy)
 		print("\tUnambigous Tokens:", len(self.babyTagger.Unambig))
@@ -54,7 +54,7 @@ class daddyTagger:
 		print("Momma Tagger:")
 		print("\tTag types:", len(self.mommaTagger.all_tags))
 		print("\tTrigram types:", len(self.mommaTagger.mid_prob))
-		print("\tTotal trigrams:", mtc)
+		print("\tTotal trigrams:", self.mommaTagger.total_trigrams)
 
 	def tag(self, s, threshold = .9, fc = True):
 		"""
@@ -219,6 +219,10 @@ class daddyTagger:
 
 	def tag_corpus(self, corpus, verbose = True):
 		"""
+		not too clean yet...
+		go through one of our corpora - EANC or wikipedia - and tag it
+		we then save the results in 3 files - one with just the sentences, one 
+		with just a sequence of tags and one with each word tagged (w_t)
 		"""
 		running = []
 		goldsX = []
@@ -301,18 +305,41 @@ class daddyTagger:
 if __name__ == "__main__":
 	print("Loading the 2 taggers...")
 	# load the 2 sub-taggers
-	b = c_load("taggers/b_tagger.t")
-	m = c_load("taggers/m_tagger.t")
+	baby = c_load("taggers/b_tagger.t")
+	momma = c_load("taggers/m_tagger.t")
 	# make the big one
 	print("Building the final tagger...")
-	daddy = daddyTagger(b, m)
+	daddy = daddyTagger(baby, momma)
 	c_save(daddy, "taggers/d_tagger.t")
 
 	daddy.say_hello()
 	
-	corpus = "hyWiki"
-	corpus = "EANC"
-	daddy.tag_corpus(corpus)
+	# tag the corpora
+	#corpus = "hyWiki"
+	#corpus = "EANC"
+	#daddy.tag_corpus(corpus)
+
+
+
+		# split our gold data into test and train
+	train, test = split_corpus("EANC.golds.txt", ratio = .25)
+		# find all words that are in JUST the test data
+	#_, train_u, test_u = find_unique_words(test, train, verbose = False)
+		# find a count of trigrams in the test data
+	#tg = count_trigrams(test, verbose = False)
+
+	#baby.forget(unambig_to_f = test_u, verbose = False)
+	#momma.forget(trigrams_to_f = tg, verbose = False)
+
+	#print("\n\nDone forgetting, re-building classifier...")
+	#new_daddy = daddyTagger(baby, momma)
+	#c_save(new_daddy, "taggers/nd_tagger.t")
+	new_daddy = c_load("taggers/nd_tagger.t")
+	new_daddy.say_hello()
+
+	# now, let's try and tag the sentences in 'test'
+	score_tagger(test, new_daddy)
+
 
 
 	"""
