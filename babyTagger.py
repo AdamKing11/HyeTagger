@@ -7,14 +7,12 @@ Adam King 2016 University of Arizona
 A POS tagger that uses Naive Bayesian classifiers (and LSTM language models) to tagger
 Armenian language text
 
-class hyTagger:
-	morphBayes - classifier trained on unambiguous tokens from EANC
-	synBayes - classifier built on tag trigrams
-
+	
 """
 
 from lib.word_features import *
 from lib.bclass_cross import *
+from lib.test_eval import *
 
 
 class babyTagger:
@@ -23,6 +21,10 @@ class babyTagger:
 	ambig = {}		# dictionary for ambiguous tokens
 
 	tag_count = {}	# for storing the types of tags we have and their counts
+					# note, this only holds counts for "open" classes, tags
+					# that we train the classifier on, ie not tags we EXPECT
+					# to find new words for, ie punctuation, sentence start/end, etc
+
 	babyTagger = 0	# just a place holder
 
 	accuracy = 1. 	# for storing the accuracy of our tagger,
@@ -139,6 +141,39 @@ class babyTagger:
 		shuffle(training_set)
 		self.accuracy, _ = cross_validation(training_set, k, verbose = verbose)
 
+
+	def forget(self, unambig_to_f = None, ambig_to_f = None, verbose = True):
+		"""
+		million dollar idea, dollars and donuts
+		we're going to "forget" certain unambiguous and ambiguous tokens we've seen 
+		and retrain
+		this way, we can test on "gold" sentences we've found by looking up every word
+		and getting a sentence of ONLY unambiguos tokens
+		"""
+
+		if unambig_to_f == None:
+			unambig_to_f = []
+		if ambig_to_f == None:
+			ambig_to_f = []
+
+		if verbose:
+			print("Now **forgetting**", len(unambig_to_f), "unambiguous tokens and",\
+				len(ambig_to_f), "ambiguous tokens.")
+			print("Previous unambiguos token count:", len(self.Unambig))
+		for f in unambig_to_f:
+			if f in self.Unambig:
+				del self.Unambig[f]
+		if verbose:
+			print("\tNew unambiguos count:", len(self.Unambig))
+			print("Previous ambiguos token count:", len(self.ambig))
+		for f in ambig_to_f:
+			if f in self.ambig:
+				del self.ambig[f]
+		if verbose:
+			print("\tNew ambiguous token count:", len(self.ambig))
+			print("Retraining....")
+
+		self.build_baby_classifier(verbose = verbose)
 
 	def quick_tag(self, word):
 		"""
@@ -265,12 +300,32 @@ class babyTagger:
 		wF.close()
 
 if __name__ == "__main__":
-   	babyTag = babyTagger("EANC_tokens.txt")
+	#babyTag = babyTagger("10000.txt")
+	#babyTag = babyTagger("EANC_tokens.txt")
+	baby = c_load("taggers/b_tagger.t")
+	train, test = split_corpus("EANC.golds.txt", ratio = .5)
+	b, train_u, test_u = find_unique_words(test, train)
+
+	#for ts in test:
+	#	s = [split_tagged_lemma(w)[0] for w in ts]
+	#	tagged, score = babyTag.quick_tag_sentence(s)
+	#	print(score)
+
+	baby.forget(unambig_to_f = test_u)
+
+
+	for ts in test:
+		s = [split_tagged_lemma(w)[0] for w in ts]
+		tagged, score = babyTag.quick_tag_sentence(s)
+		for g in tagged:
+			if g[0] != 1:
+				print("\nWe don't know:", g[1], g[2])
+   	#babyTag = babyTagger("EANC_tokens.txt")
    	#babyTag = c_load("taggers/b_tagger.t")
    	#babyTag.test_baby_classifier(4)
    	#print(babyTag.all_tags)
    	
-   	c_save(babyTag, "taggers/b_tagger.t")
+   	#c_save(babyTag, "taggers/b_tagger.t")
    	
    	#print(babyTag.quick_tag("բան"))
    	#print(babyTag.quick_tag("համար"))
