@@ -3,7 +3,7 @@ import re, sys, random
 from lib.word_features import *
 
 
-def split_corpus(corpus_file, ratio = .75):
+def split_corpus(corpus_file, ratio = .75, shuf = True):
 	"""
 	split a list of sentences into two parts with the first
 	part taking up the 'ratio' of the original bulk
@@ -18,7 +18,9 @@ def split_corpus(corpus_file, ratio = .75):
 			line = line.rsplit("\t")
 			whole_corpus.append(line)
 
-	random.shuffle(whole_corpus)
+	if shuf:
+		random.shuffle(whole_corpus)
+
 	train_len = int(len(whole_corpus) * ratio)
 	train = whole_corpus[:train_len]
 	test = whole_corpus[train_len:]
@@ -108,11 +110,14 @@ def count_trigrams(c, verbose=True):
 
 	return trigrams
 
-def score_tagger(gold_sentences, tagger):
+def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1.):
 	"""
 	takes a list of sentences and compares their tags
 	"""
 	all_words = 0
+	all_guesses = 0
+	wrong_types = set([])
+	all_types = set([])
 	wrong = 0
 	i = 0
 	print("Word\tGold\tGuess")
@@ -123,13 +128,19 @@ def score_tagger(gold_sentences, tagger):
 		gold = [split_tagged_lemma(w)[1] for w in s]
 		s = [split_tagged_lemma(w)[0] for w in s]
 		
-		guess, _ = tagger.tag(s)
+		guess, g_info = tagger.tag(s, morph_weight = morph_weight, \
+			syn_weight = syn_weight)
 		
-		all_words += len(gold)
+		all_words += len(s)
+		all_guesses += len(g_info)
 		for t in range(len(gold)):
+			all_types.add(s[t])
 			if gold[t] != guess[t]:
 				print(s[t] + "\t" + gold[t] + "\t" + guess[t])
 				wrong += 1
-	print(wrong, "out of", all_words, "wrong.")
-	print("\t", 1-(wrong/all_words))
+				wrong_types.add(s[t])
+	print()
+	print(wrong, "out of", all_guesses, "wrong guesses. (%.3f)" % (1-(wrong/all_guesses)))
+	print(len(wrong_types), "out of", len(all_types), "wrong types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
+	print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
 			 
