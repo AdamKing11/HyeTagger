@@ -56,7 +56,7 @@ class daddyTagger:
 		print("\tTrigram types:", len(self.mommaTagger.mid_prob))
 		print("\tTotal trigrams:", self.mommaTagger.total_trigrams)
 
-	def tag(self, s, threshold = .9, fc = True):
+	def tag(self, s, threshold = 1., fc = True, morph_weight = 1., syn_weight = 1.):
 		"""
 			Tag a sentence! (duh)
 			We first go through and find all unambiguous words in the sentence
@@ -112,7 +112,9 @@ class daddyTagger:
 				# we'll now send the gap to our happy, little gap guess function thing
 				# it will return the best guess and a measure of probability that that
 				# guess is right
-				gap_guesses = self.gap_fill(gap)
+				
+				gap_guesses = self.gap_fill(gap, morph_weight = morph_weight, \
+					syn_weight = syn_weight)
 				j = start_gap + 1
 				for g in gap_guesses:
 					# fill in our sequence of tags with the winner for this word
@@ -125,7 +127,7 @@ class daddyTagger:
 
 		return tagged, guess_info
 
-	def gap_fill(self, s, threshold = .9):
+	def gap_fill(self, s, morph_weight = 1., syn_weight = 1.):
 		"""
 		a means of finding the best fit of tags for an unknown sequence
 		we start with KNOWING the first and last word/tag pair (but we could always do
@@ -156,7 +158,6 @@ class daddyTagger:
 			probs = [pos_tags[k] for k in np.arange(0,len(pos_tags),2)]
 			tags = [pos_tags[k] for k in np.arange(1,len(pos_tags),2)]
 
-#			print("\t", w, tags)
 			if len(tags) == 1:	
 				# if it's an unambigous word, ie the first and last
 				# we just copy the SINGLE tag 3 times
@@ -202,19 +203,21 @@ class daddyTagger:
 				# so, probability we get T2 for W2: "w1_t1 W2_T2 w3_t3"  is: p(t1|w1) * p(t3|w3) * 
 				# p(t1,T2,t3) for all possible w/t combinations for both sides
 				em = word_tag_dict[(w,tag)]
-				prob_matrix[i,j] = em*tr
+				##### changing from product to SUM
+				prob_matrix[i,j] = (em * morph_weight) + (tr * syn_weight)
 
 			# now we normalize the probs...
 			for j in range(mc):
 				prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i].sum() 
 
+		#print(prob_matrix)
 		gap_guess = []
 		for i in range(1,len(s)-1):
 			guess_index = np.argmax(prob_matrix[i])
 			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
-			if prob_matrix[i,].sum() == 0:
-				print("WHOA!")
 			gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
+		#print(len(s), len(gap_guess), gap_guess)
+		
 		return gap_guess
 
 	def tag_corpus(self, corpus, verbose = True):
@@ -238,9 +241,6 @@ class daddyTagger:
 		with open("golds/" + corpus + ".silver.M.txt", "w") as wF:
 			pass
 	
-
-#	for t in m.all_tags:
-#		print(t)
 		if verbose:
 			print("\n" + "-" * 10 + corpus + "-" * 10 + "\n")
 	# let's load in some sentences....
@@ -277,8 +277,6 @@ class daddyTagger:
 					tagged_s = ""
 
 					if conf >= 1.0:
-					#print(s)
-					#print(conf, len(g), g)
 						for j in range(len(s)):
 							tagged_s += s[j] + "_" + t[j] + " "
 						tagged_s = tagged_s[0:-1]
@@ -308,39 +306,47 @@ if __name__ == "__main__":
 	baby = c_load("taggers/b_tagger.t")
 	momma = c_load("taggers/m_tagger.t")
 	# make the big one
-	print("Building the final tagger...")
+	#print("Building the final tagger...")
 	daddy = daddyTagger(baby, momma)
-	c_save(daddy, "taggers/d_tagger.t")
+	#c_save(daddy, "taggers/d_tagger.t")
 
 	daddy.say_hello()
 	
 	# tag the corpora
-	#corpus = "hyWiki"
+	corpus = "hyWiki"
 	#corpus = "EANC"
 	#daddy.tag_corpus(corpus)
 
 
 
 		# split our gold data into test and train
-	train, test = split_corpus("EANC.golds.txt", ratio = .25)
+	train, test = split_corpus("hyWiki.golds.txt", ratio = .75, shuf = False)
 		# find all words that are in JUST the test data
-	#_, train_u, test_u = find_unique_words(test, train, verbose = False)
+	_, train_u, test_u = find_unique_words(test, train, verbose = False)
 		# find a count of trigrams in the test data
-	#tg = count_trigrams(test, verbose = False)
+	tg = count_trigrams(test, verbose = False)
 
-	#baby.forget(unambig_to_f = test_u, verbose = False)
-	#momma.forget(trigrams_to_f = tg, verbose = False)
+	baby.forget(unambig_to_f = test_u, verbose = False)
+	momma.forget(trigrams_to_f = tg, verbose = False)
 
-	#print("\n\nDone forgetting, re-building classifier...")
-	#new_daddy = daddyTagger(baby, momma)
+	print("\n\nDone forgetting, re-building classifier...")
+	new_daddy = daddyTagger(baby, momma)
 	#c_save(new_daddy, "taggers/nd_tagger.t")
-	new_daddy = c_load("taggers/nd_tagger.t")
+	
+
+	#new_daddy = c_load("taggers/nd_tagger.t")
 	new_daddy.say_hello()
 
 	# now, let's try and tag the sentences in 'test'
-	score_tagger(test, new_daddy)
+	score_tagger(test, new_daddy, morph_weight = 1, syn_weight = 1)
 
 
+	"""
+	print(momma.tag_trigrams[("A", "A", "PUNC")])
+	print(momma.tag_trigrams[("A", "N", "PUNC")])
+	baby.forget(unambig_to_f = ["փող"])
+	print(baby.quick_tag("փող"))
+	"""
 
 	"""
 	s = "<s> Դուք կարող եք դիտել կամ պատճենել այս էջի կոդը ։ </s>"
