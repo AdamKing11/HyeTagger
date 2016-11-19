@@ -1,5 +1,5 @@
 import re, sys, nltk
-from random import shuffle
+import random
 """
 Armenian POS Tagger
 Adam King 2016 University of Arizona
@@ -39,80 +39,10 @@ class babyTagger:
 		"""
 		create the tagger
 		"""
-		_, self.Unambig, self.ambig, _ = self.read_EANC(token_file, verbose = verbose)
+		self.Unambig, self.ambig, _, _, self.all_tags = read_EANC(token_file, verbose = verbose)
+		# read_EANC function in the libs
 		self.build_baby_classifier(verbose = verbose)
 	
-
-	def read_EANC(self, token_file, verbose = True, fc = True):
-		"""
-    Reads in a list of tokens we've culled from EANC and returns a list of:
-    TOKEN[token] - (unigram_count, TAGS, DEFS)
-    UNIQUE[token] - [TAG]
-    AMBIGUOUS[token] - [TAGS]
-    NO_POS[token] - []  
-    	"""
-		tokens = {}
-		unique = {}
-		ambiguous = {}
-		no_pos = {}
-		if verbose:
-			print("Reading in tokens from", token_file)
-		with open(token_file, "r") as rF:
-			i = 0
-			for line in rF:
-				i+=1
-				if verbose:
-					print("\tReading token -", i, end="\r")
-				line = line.rstrip()
-				l = line.rsplit("\t")
-				# if it's a blank line for whatever reason, SKIP
-				if l[0] == "":
-					continue
-            	# the token in question is first thing on line... duh
-				if fc:
-					token = l[0].lower()
-				else:
-					token = l[0]
-				try:
-					tokens[token] = (l[1], l[2], l[3])
-				except:
-					# if we can't split it, it's because there's nothing, ie no POS
-					tokens[token] = (l[1], [], [])
-            	# if there is no token, just skip skip skip
-				lemmas = re.sub("[\['\]]", "", l[2]).rsplit(",") 
-				# here, we get all the tags for the various lemmas associated with the
-				# token         
-				lemma_set = set([])
-				tag_set = set([])
-				for l in lemmas:
-					if l != "":
-						# NOTE! we're not adding the tags, we're adding TAGGED lemmas to
-						# the list for each word
-						lemma_set.add(l)
-						# now, we get a list of tags
-						tag = split_tagged_lemma(l)[1]
-						tag_set.add(tag)
-						if tag in self.all_tags:
-							self.all_tags[tag] += 1
-						else:
-							self.all_tags[tag] = 1
-				# now that we've gotten all the tags from the various lemmas,
-				# decide which group to put the token in
-				if len(lemma_set) == 0:
-					no_pos[token] = []
-				elif len(lemma_set) > 1:
-					ambiguous[token] = list(lemma_set)
-				else:
-					unique[token] = list(lemma_set)
-
-		if verbose:
-			print("\nTotal tokens:", len(tokens), "\tTotal tag types:", len(self.all_tags))
-			print("\tUnambiguous:",len(unique))
-			print("\tAmbiguous:",len(ambiguous))
-			print("\tNo Label:",len(no_pos))
-
-		# return all lists
-		return tokens, unique, ambiguous, no_pos
 
 	def build_baby_classifier(self, verbose = True):
 		"""
@@ -123,12 +53,32 @@ class babyTagger:
 		training_set, self.tag_count = format_training_data(self.Unambig)     
     			
 		# shuffle the order of the list
-		shuffle(training_set)
+		random.shuffle(training_set)
 
 		if verbose:
 			print("\nNow training a Naive Bayesisan Classifier on", \
 				len(training_set), "unambiguous tokens.")
 		self.babyTagger = nltk.NaiveBayesClassifier.train(training_set)
+
+	def limit_and_rebuild(self, tag_max, tag_types = None, verbose = True):
+		"""
+		take a classifier, shrink down the number of ambiguous tokens to a 
+		particular max count per tag and rebuild
+		"""
+
+		if verbose:
+			print("Shrinking the dictionary of unambiguous tokens.")
+			print("Starting with", len(self.Unambig), "unambiguous tokens.")
+		
+		self.Unambig = shrink_token_dict(self.Unambig, tag_max = tag_max, \
+			tag_types = tag_types)
+
+		if verbose:
+			print("\tDone. Now, we have", len(self.Unambig), "tokens. Re-training...")
+
+		self.build_baby_classifier(verbose = verbose)	
+
+
 
 	def test_baby_classifier(self, k, verbose = True):
 		"""
@@ -138,7 +88,7 @@ class babyTagger:
 		training_set, _ = format_training_data(self.Unambig)
 				
 		# shuffle the order of the list
-		shuffle(training_set)
+		random.shuffle(training_set)
 		self.accuracy, _ = cross_validation(training_set, k, verbose = verbose)
 
 
@@ -175,7 +125,7 @@ class babyTagger:
 
 		self.build_baby_classifier(verbose = verbose)
 
-	def quick_tag(self, word):
+	def quick_tag(self, word, fc = True):
 		"""
 		quick and dirty tagger
 			if word is in our unambiguous list - tag as that unambiguous tag
@@ -185,6 +135,9 @@ class babyTagger:
 		
 		if len(word) == 0:
 			return "N/A"
+
+		if fc:
+			word = word.lower()
 
 		tagged_entry = ()
 		# UNAMBIGOUS WORDS
@@ -253,7 +206,7 @@ class babyTagger:
 		return tagged_s, numpy.mean(scores)
 
 	def quick_tag_corpus(self, hyCorpora, outfile, total_s = 100, \
-			min_w = 8, verbose = True):
+			min_w = 8, min_score = 0, verbose = True):
 		"""
 		go through a CLEANED corpus file and tag the sentences using the tagger
 		"""
@@ -286,13 +239,14 @@ class babyTagger:
 			# tag sentence
 			tagged_sentence, mean_score = self.quick_tag_sentence(s)
 
-			for w in tagged_sentence:
-				writeString = w[1]
+			if mean_score > min_score:
+				for w in tagged_sentence:
+					writeString = w[1]
 				# loop through the tags and their scores
-				for t in w[2]:
-					writeString += "\t" + str(t)
-				wF.write(writeString + "\n")
-			wF.write(str(mean_score) + "\t" + str(len(s)) + "\n\n")
+					for t in w[2]:
+						writeString += "\t" + str(t)
+					wF.write(writeString + "\n")
+				wF.write(str(mean_score) + "\t" + str(len(s)) + "\n\n")
 
 		if verbose:
 			print("\nDone reading file. Closing now.")
@@ -302,15 +256,31 @@ class babyTagger:
 if __name__ == "__main__":
 	#babyTag = babyTagger("10000.txt")
 	#babyTag = babyTagger("EANC_tokens.txt")
-	baby = c_load("taggers/b_tagger.t")
-	train, test = split_corpus("EANC.golds.txt", ratio = .5)
-	b, train_u, test_u = find_unique_words(test, train)
+	#babyTag.test_baby_classifier(6)
+
+	#baby = c_load("taggers/b_tagger.t")
+	#train, test = split_corpus("EANC.golds.txt", ratio = .5)
+	#b, train_u, test_u = find_unique_words(test, train)
 
 	#for ts in test:
 	#	s = [split_tagged_lemma(w)[0] for w in ts]
 	#	tagged, score = babyTag.quick_tag_sentence(s)
 	#	print(score)
 
+
+	#baby = babyTagger("EANC_tokens.txt")
+	#baby.test_baby_classifier(6)
+
+	#c_save(baby, "taggers/b_tagger.t")
+	baby = c_load("taggers/b_tagger.t")
+	
+	baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.txt", min_score = .95,
+		min_w = 10, total_s = 300)
+	#baby.shrink_token_dict(100)
+	#baby.test_baby_classifier
+	
+	
+	"""
 	baby.forget(unambig_to_f = test_u)
 
 
@@ -338,3 +308,4 @@ if __name__ == "__main__":
    	#for t in babyTag.all_tags:
    	#	print(t, babyTag.all_tags[t])
 
+   	"""
