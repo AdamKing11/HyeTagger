@@ -9,7 +9,7 @@ def separate_punc_outside(word, left_punc = None, right_punc = None):
     if left_punc == None:
         left_punc = "«\"(\\-"
     if right_punc == None:
-        right_punc = "\",;»։:)\\-"
+        right_punc = "\",;»։:։)\\-"
         
     # define the regexes
     left_reg = "^([" + left_punc + "])(.+)$"
@@ -64,6 +64,7 @@ def parse_punc_line(line):
     """
     takes a line of Armenian text and parses out the punctuation    
     """
+    line = re.sub("\t", " ", line)
     line = line.rstrip().rsplit(" ")
     parsed_line = ""
     for w in line:
@@ -74,11 +75,15 @@ def parse_punc_line(line):
     
 ################################################################################
 
+#"s = "Փառատոնը   որ  տեղի    է   ունենում    ամեն    տարի    սեպտեմբեր   դեկտեմբեր   ամիսների    ընթացքում   հյուրընկալում   է   աշխարհի տարբեր  երկրների    կատարողների երաժշտական  կոլեկտիվների    թատերախմբերի    կազմակերպում    գեղանկարչական   ու  լուսանկարչական  ցուցադրումներ։"
+#"print(parse_punc_line(s))
+
+
 if __name__ ==  "__main__":
-    #rF = open(sys.argv[1], "r")
-    #wF = open(sys.argv[2], "w")
-    rF = open("hyWiki.prePUNC", "r")
-    wF = open("hyWiki.punc_sep", "w")
+    rF = open(sys.argv[1], "r")
+    wF = open(sys.argv[2], "w")
+    #rF = open("hyWiki.prePUNC", "r")
+    #wF = open("hyWiki.punc_sep", "w")
     
     i = 0    
     for line in rF:
@@ -88,4 +93,3 @@ if __name__ ==  "__main__":
     print()
     wF.close()
     rF.close()
-    
