@@ -110,7 +110,7 @@ def count_trigrams(c, verbose=True):
 
 	return trigrams
 
-def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1.):
+def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., verbose = True):
 	"""
 	takes a list of sentences and compares their tags
 	"""
@@ -120,7 +120,8 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1.):
 	all_types = set([])
 	wrong = 0
 	i = 0
-	print("Word\tGold\tGuess")
+	if verbose:
+		print("Word\tGold\tGuess")
 	for s in gold_sentences:
 		i+=1
 		# gotta split the words in the gold sentences since they all
@@ -136,11 +137,15 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1.):
 		for t in range(len(gold)):
 			all_types.add(s[t])
 			if gold[t] != guess[t]:
-				print(s[t] + "\t" + gold[t] + "\t" + guess[t])
+				if verbose:
+					print(s[t] + "\t" + gold[t] + "\t" + guess[t])
 				wrong += 1
 				wrong_types.add(s[t])
-	print()
-	print(wrong, "out of", all_guesses, "wrong guesses. (%.3f)" % (1-(wrong/all_guesses)))
-	print(len(wrong_types), "out of", len(all_types), "wrong types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
-	print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
+	if verbose:
+		print()
+		print(wrong, "out of", all_guesses, "wrong guesses. (%.3f)" % (1-(wrong/all_guesses)))
+		print(len(wrong_types), "out of", len(all_types), "wrong types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
+		print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
+
+	return ((all_words - wrong)/all_words)
 			 
