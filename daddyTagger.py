@@ -204,7 +204,7 @@ class daddyTagger:
 				# p(t1,T2,t3) for all possible w/t combinations for both sides
 				em = word_tag_dict[(w,tag)]
 				##### changing from product to SUM
-				prob_matrix[i,j] = (em * morph_weight) + (tr * syn_weight)
+				prob_matrix[i,j] = (em * morph_weight) * (tr * syn_weight)
 
 			# now we normalize the probs...
 			for j in range(mc):
@@ -326,35 +326,21 @@ if __name__ == "__main__":
 		# find a count of trigrams in the test data
 	tg = count_trigrams(test, verbose = False)
 
-	baby.forget(unambig_to_f = test_u, verbose = False)
+	baby.limit_and_rebuild(500)
+	baby.test_baby_classifier(6)
+	#baby.forget(unambig_to_f = test_u, verbose = False)
 	momma.forget(trigrams_to_f = tg, verbose = False)
 
+	
 	print("\n\nDone forgetting, re-building classifier...")
 	new_daddy = daddyTagger(baby, momma)
 	#c_save(new_daddy, "taggers/nd_tagger.t")
-	
+
+
+		
 
 	#new_daddy = c_load("taggers/nd_tagger.t")
 	new_daddy.say_hello()
 
 	# now, let's try and tag the sentences in 'test'
 	score_tagger(test, new_daddy, morph_weight = 1, syn_weight = 1)
-
-
-	"""
-	print(momma.tag_trigrams[("A", "A", "PUNC")])
-	print(momma.tag_trigrams[("A", "N", "PUNC")])
-	baby.forget(unambig_to_f = ["փող"])
-	print(baby.quick_tag("փող"))
-	"""
-
-	"""
-	s = "<s> Դուք կարող եք դիտել կամ պատճենել այս էջի կոդը ։ </s>"
-	#s = "<s> Դուք կարող եք"
-	s = s.rsplit(" ")
-	z, g = daddy.tag(s)
-	for i in range(len(s)):
-		print(s[i] + "_" + z[i], end = " ")
-	print()
-	print(g)
-	"""
