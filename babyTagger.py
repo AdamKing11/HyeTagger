@@ -229,27 +229,29 @@ class babyTagger:
 			# make sure the sentence is long enough...
 			if len(s) < min_w:
 				continue
-			i += 1
 			# make sure we don't do too many sentences....
 			# if 0, then do all
-			if i > total_s and total_s != 0:
+			if i >= total_s and total_s != 0:
 				break
 			if verbose:
 				print("\tReading and tagging sentence #" + str(i), end="\r")
 			# tag sentence
 			tagged_sentence, mean_score = self.quick_tag_sentence(s)
 
-			if mean_score > min_score:
+			if mean_score >= min_score:
 				for w in tagged_sentence:
 					writeString = w[1]
 				# loop through the tags and their scores
 					for t in w[2]:
 						writeString += "\t" + str(t)
 					wF.write(writeString + "\n")
+					
 				wF.write(str(mean_score) + "\t" + str(len(s)) + "\n\n")
+				i += 1
 
 		if verbose:
-			print("\nDone reading file. Closing now.")
+			print()
+			print("\nDone reading file. Tagged and saved", i, "sentences.\nClosing now.")
 		rF.close()
 		wF.close()
 
@@ -268,13 +270,13 @@ if __name__ == "__main__":
 	#	print(score)
 
 
-	#baby = babyTagger("EANC_tokens.txt")
-	#baby.test_baby_classifier(6)
+	baby = babyTagger("EANC_tokens.txt")
+	baby.test_baby_classifier(6)
 
-	#c_save(baby, "taggers/b_tagger.t")
-	baby = c_load("taggers/b_tagger.t")
+	c_save(baby, "taggers/b_tagger.t")
+	#baby = c_load("taggers/b_tagger.t")
 	
-	baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.txt", min_score = .95,
+	baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.csv", min_score = .95,
 		min_w = 10, total_s = 300)
 	#baby.shrink_token_dict(100)
 	#baby.test_baby_classifier
