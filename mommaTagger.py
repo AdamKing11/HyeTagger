@@ -1,6 +1,7 @@
 import re, sys, nltk
 from random import shuffle
 
+from lib.general import *
 from lib.word_features import *
 from lib.bclass_cross import *
 from lib.test_eval import *
@@ -127,24 +128,24 @@ class mommaTagger:
 					j += 1
 					# get the tag 2 ago, 1 ago and current
 					# probably a better way to do this, rather than re-calc every time....
-					laster_tag = split_tagged_lemma(l[k-2])[1]
-					all_tags.add(laster_tag)
-					
-					last_tag = split_tagged_lemma(l[k-1])[1]
+					last_tag = split_tagged_lemma(l[k-2])[1]
 					all_tags.add(last_tag)
 					
-					tag = split_tagged_lemma(l[k])[1]
+					tag = split_tagged_lemma(l[k-1])[1]
 					all_tags.add(tag)
+					
+					next_tag = split_tagged_lemma(l[k])[1]
+					all_tags.add(next_tag)
 
-					tg = (laster_tag, last_tag, tag)
+					tg = (last_tag, tag, next_tag)
 					
 					if tg in trigrams:
 						trigrams[tg] += 1
 					else:
 						trigrams[tg] = 1
 		if verbose:
-			print("Read in", i, "sentences and found", j, "trigrams with", len(all_tags), \
-				"total trigram types.")
+			print("Read in", i, "sentences and found", j, "individual trigrams with", len(all_tags), \
+				"total tag types.")
 		return trigrams, all_tags
 
 	def prob_middle(self, context, target):
@@ -182,7 +183,9 @@ class mommaTagger:
 if __name__ == "__main__":
 	#momma = mommaTagger("tagged.wiki.txt")
 	
-	#momma = mommaTagger("EANC.200.hand.txt", tagged_c_type = 2)
+	momma = mommaTagger("EANC.200.hand.txt", tagged_c_type = 2)
+	momma = mommaTagger("hyWiki.golds.txt", tagged_c_type = 2)
+	
 	#c_save(momma, "taggers/m_tagger.t")
 	#momma = c_load("taggers/m_tagger.t")
 	
