@@ -191,6 +191,7 @@ def addFeatures(token, lemma):
     # if word has the sequence եց or աց, prob a causitive verb
     feat['causitive'] = bool(re.search("[աե]ց",lw))
     
+    # return the DICTIONARY of features and their values
     return feat
 
 def format_training_data(all_tokens):
@@ -226,7 +227,7 @@ def format_training_data(all_tokens):
                 tag_set[tag] += 1
             else:
                 tag_set[tag] = 1
-                
+    
     return training_set, tag_set
 
 def c_save(t, tagger_file):
