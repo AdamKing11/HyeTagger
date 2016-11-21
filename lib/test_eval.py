@@ -26,6 +26,38 @@ def split_corpus(corpus_file, ratio = .75, shuf = True):
 	test = whole_corpus[train_len:]
 	return train, test
 	
+def read_corpus(corpus_file, shuf = True):
+	"""
+	reads in a corpus file where each sentence is on its own line and
+	the format is "w_t w_t w_t..."
+	"""
+	whole_corpus = []
+
+	with open(corpus_file, "r") as rF:
+		for line in rF:
+			line = line.rstrip()
+			line = line.rsplit("\t")
+			whole_corpus.append(line)
+
+	if shuf:
+		random.shuffle(whole_corpus)
+
+	return whole_corpus
+
+def get_words(c, fc = True):
+	"""
+	takes a list of sentences (like from the function above)
+	and shoots out a list of words in that corpus
+	"""
+	lex = {}
+	for s in c:
+		for w in s:
+			word = split_tagged_lemma(w)[0]
+			if fc:
+				word = word.lower() 
+			lex[word] = w
+	return lex
+
 
 def find_unique_words(test, train, verbose = True):
 	"""
@@ -136,15 +168,18 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., ver
 		all_guesses += len(g_info)
 		for t in range(len(gold)):
 			all_types.add(s[t])
-			if gold[t] != guess[t]:
+			# if our tag doesn't match the gold tag AND the gold tag is not N/A (EANC didn't know)
+			# what the right tag was
+			if gold[t] != guess[t] and gold[t] != "N/A":
 				if verbose:
 					print(s[t] + "\t" + gold[t] + "\t" + guess[t])
 				wrong += 1
 				wrong_types.add(s[t])
-	if verbose:
+	if True:
 		print()
+		print("Morphology Weight:", morph_weight, "\t\tSyntax Weight:", syn_weight)
 		print(wrong, "out of", all_guesses, "wrong guesses. (%.3f)" % (1-(wrong/all_guesses)))
-		print(len(wrong_types), "out of", len(all_types), "wrong types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
+		print(len(wrong_types), "out of", len(all_types), "wrong word types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
 		print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
 
 	return ((all_words - wrong)/all_words)
