@@ -8,6 +8,7 @@ A POS tagger that uses Naive Bayesian classifiers (and LSTM language models) to 
 Armenian language text
 	"""
 
+from lib.general import *
 from lib.word_features import *
 from lib.bclass_cross import *
 from lib.test_eval import *
@@ -132,7 +133,7 @@ class babyTagger:
 
 		self.build_baby_classifier(verbose = verbose)
 
-	def quick_tag(self, word, fc = True):
+	def quick_tag(self, word, fc = True, max_guess = 3):
 		"""
 		quick and dirty tagger
 			if word is in our unambiguous list - tag as that unambiguous tag
@@ -178,18 +179,18 @@ class babyTagger:
 		
 		# UNKNOWN WORDS
 		else:
-			# we look at the top 3 best guesses
-			guess_matrix = [(0,0) for _ in range(3)]
+			# we look at the top 'max_guess' best guesses
+			guess_matrix = [(0,0) for _ in range(max_guess)]
 			# get a list of tags and probabilities
 			# because we only have the TOKEN, assume the token = lemma
 			guess = self.babyTagger.prob_classify(addFeatures(word,word))
 			for g in sorted(guess.samples(), key=guess.prob, \
-                    reverse=True)[:3]:
+                    reverse=True)[:max_guess]:
 			## we get the guesses and MULTIPLY by the accuracy of our classifer
 				guess_prob = guess.prob(g) * self.accuracy
 				guess_matrix.append((guess_prob, g))
 			# we'll save the best 3 results   
-			guess_matrix = sorted(guess_matrix, reverse=True)[:3]
+			guess_matrix = sorted(guess_matrix, reverse=True)[:max_guess]
             
             # flatten the list of lists
 			guess_matrix = tuple([x for y in guess_matrix for x in y])
@@ -280,7 +281,7 @@ if __name__ == "__main__":
 	baby = babyTagger("EANC_tokens.txt")
 	#baby.test_baby_classifier(6)
 
-	c_save(baby, "taggers/b_tagger.t")
+	#c_save(baby, "taggers/b_tagger.t")
 	#baby = c_load("taggers/b_tagger.t")
 	
 	#baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.csv", min_score = .95,
