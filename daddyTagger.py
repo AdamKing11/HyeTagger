@@ -150,7 +150,6 @@ class daddyTagger:
 		prob_matrix = numpy.zeros((len(s),mc))
 		tag_matrix = []
 
-		
 		for i in range(len(s)):
 			w = s[i]
 			
@@ -182,6 +181,7 @@ class daddyTagger:
 						tag_list.append(tags[len(tags)-1])
 				tag_matrix.append(tag_list)
 
+
 		for i in range(1,len(s)-1):
 			w = s[i]
 			# get all possible tags for previous and following 
@@ -204,19 +204,19 @@ class daddyTagger:
 				# p(t1,T2,t3) for all possible w/t combinations for both sides
 				em = word_tag_dict[(w,tag)]
 				##### changing from product to SUM
-				prob_matrix[i,j] = (em * morph_weight) * (tr * syn_weight)
+				# with the SUM, we can set either weight to 0 and still use the other....
+				prob_matrix[i,j] = (em * morph_weight) + (tr * syn_weight)
 
 			# now we normalize the probs...
 			for j in range(mc):
-				prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i].sum() 
+				prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i,].sum() 
+			#	pass
 
-		#print(prob_matrix)
 		gap_guess = []
 		for i in range(1,len(s)-1):
 			guess_index = np.argmax(prob_matrix[i])
 			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
 			gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
-		#print(len(s), len(gap_guess), gap_guess)
 		
 		return gap_guess
 
@@ -317,30 +317,29 @@ if __name__ == "__main__":
 	#corpus = "EANC"
 	#daddy.tag_corpus(corpus)
 
-
-
 		# split our gold data into test and train
-	train, test = split_corpus("hyWiki.golds.txt", ratio = .75, shuf = False)
+	#train, test = split_corpus("hyWiki.golds.txt", ratio = .75, shuf = False)
+	train, test = split_corpus("EANC.200.hand.txt", ratio = .5, shuf = False)
+	
+
 		# find all words that are in JUST the test data
 	_, train_u, test_u = find_unique_words(test, train, verbose = False)
 		# find a count of trigrams in the test data
 	tg = count_trigrams(test, verbose = False)
 
-	baby.limit_and_rebuild(500)
-	baby.test_baby_classifier(6)
-	#baby.forget(unambig_to_f = test_u, verbose = False)
+	#baby.limit_and_rebuild(500)
+	#baby.test_baby_classifier(6)
+	baby.forget(unambig_to_f = test_u, verbose = False)
 	momma.forget(trigrams_to_f = tg, verbose = False)
 
 	
 	print("\n\nDone forgetting, re-building classifier...")
 	new_daddy = daddyTagger(baby, momma)
 	#c_save(new_daddy, "taggers/nd_tagger.t")
-
-
 		
 
 	#new_daddy = c_load("taggers/nd_tagger.t")
 	new_daddy.say_hello()
 
 	# now, let's try and tag the sentences in 'test'
-	score_tagger(test, new_daddy, morph_weight = 1, syn_weight = 1)
+	score_tagger(test, new_daddy, morph_weight = 0, syn_weight = 1, verbose=False)
