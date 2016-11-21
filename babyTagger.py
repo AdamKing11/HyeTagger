@@ -35,11 +35,18 @@ class babyTagger:
 	all_tags = {}	# to see which tags we're actually working on predicting
 					# also, get a count of each tag... maybe for a prior prob
 
-	def __init__(self, token_file, verbose = True):
+	def __init__(self, tokens, read_from_file = True, verbose = True):
 		"""
 		create the tagger
+		we can either have it read in the EANC tokens OR pass it a dictionary
+		of tokens, we assume to be unambiguous
 		"""
-		self.Unambig, self.ambig, _, _, self.all_tags = read_EANC(token_file, verbose = verbose)
+		if read_from_file:
+			self.Unambig, self.ambig, _, _, self.all_tags = read_EANC(tokens, verbose = verbose)
+		else:
+			# because unambiguous tokens are always in a list of size 1
+			for t in tokens:
+				self.Unambig[t] = [tokens[t]]
 		# read_EANC function in the libs
 		self.build_baby_classifier(verbose = verbose)
 	
