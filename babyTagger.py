@@ -6,9 +6,7 @@ Adam King 2016 University of Arizona
 
 A POS tagger that uses Naive Bayesian classifiers (and LSTM language models) to tagger
 Armenian language text
-
-	
-"""
+	"""
 
 from lib.word_features import *
 from lib.bclass_cross import *
@@ -19,6 +17,8 @@ class babyTagger:
 
 	Unambig = {}	# dictionary for UNambiguous tokens
 	ambig = {}		# dictionary for ambiguous tokens
+
+	unknown = {}
 
 	tag_count = {}	# for storing the types of tags we have and their counts
 					# note, this only holds counts for "open" classes, tags
@@ -271,13 +271,13 @@ if __name__ == "__main__":
 
 
 	baby = babyTagger("EANC_tokens.txt")
-	baby.test_baby_classifier(6)
+	#baby.test_baby_classifier(6)
 
 	c_save(baby, "taggers/b_tagger.t")
 	#baby = c_load("taggers/b_tagger.t")
 	
-	baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.csv", min_score = .95,
-		min_w = 10, total_s = 300)
+	#baby.quick_tag_corpus("EANC.READY.txt", "hand_gold/g.csv", min_score = .95,
+	#	min_w = 10, total_s = 300)
 	#baby.shrink_token_dict(100)
 	#baby.test_baby_classifier
 	
