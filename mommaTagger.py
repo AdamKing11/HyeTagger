@@ -17,13 +17,17 @@ class mommaTagger:
 					# key formet = ((PREV, FOLLOWING), TAG)
 
 
-	def __init__(self, tagged_c, verbose = True):
+	def __init__(self, tagged_c, tagged_c_type = 1, verbose = True):
 		"""
 		trains a trigram probability classifier
 		we load in the tagged corpus from the babyTagger file
 		and use that to calculate trigram probabilites for tags
 		"""
-		self.tag_trigrams, self.all_tags = self.read_tag_trigrams(tagged_c)
+		# type 1 for each word being on its own line
+		if tagged_c_type == 1:
+			self.tag_trigrams, self.all_tags = self.read_tag_trigrams(tagged_c)
+		if tagged_c_type == 2:
+			self.tag_trigrams, self.all_tags = self.read_hand_tagged(tagged_c)
 		self.mid_prob = self.build_mp_dict()
 		self.total_trigrams = self.count_all_trigrams()
 	
@@ -105,6 +109,44 @@ class mommaTagger:
 				len(trigrams), "trigram types.")
 		return trigrams, all_tags
 
+	def read_hand_tagged(self, hand_tagged_file, verbose = True):
+		"""
+		reads a tagged corpus where each sentence is on its own line AND word/tags are
+		in the format: w_t w_t w_t" etc
+		"""
+		all_tags = set([])
+		trigrams = {}
+		if verbose:
+			print("Opening the hand tagged file", hand_tagged_file, "now.")
+		with open(hand_tagged_file, "r") as rf:
+			i, j = 0, 0
+			for l in rf:
+				i += 1
+				l = l.rstrip().rsplit("\t")
+				for i in range(2, len(l)):
+					j += 1
+					# get the tag 2 ago, 1 ago and current
+					# probably a better way to do this, rather than re-calc every time....
+					laster_tag = split_tagged_lemma(l[i-2])[1]
+					all_tags.add(laster_tag)
+					
+					last_tag = split_tagged_lemma(l[i-1])[1]
+					all_tags.add(last_tag)
+					
+					tag = split_tagged_lemma(l[i])[1]
+					all_tags.add(tag)
+
+					tg = (laster_tag, last_tag, tag)
+					
+					if tg in trigrams:
+						trigrams[tg] += 1
+					else:
+						trigrams[tg] = 1
+		if verbose:
+			print("Read in", i, "sentences and found", j, "trigrams with", len(all_tags), \
+				"total trigram types.")
+		return trigrams, all_tags
+
 	def prob_middle(self, context, target):
 		""" 
 		probability of a tag given it's previous and following tag
@@ -140,13 +182,14 @@ class mommaTagger:
 if __name__ == "__main__":
 	#momma = mommaTagger("tagged.wiki.txt")
 	
+	momma = mommaTagger("EANC.200.hand.txt", tagged_c_type = 2)
 	#c_save(momma, "taggers/m_tagger.t")
-	momma = c_load("taggers/m_tagger.t")
+	#momma = c_load("taggers/m_tagger.t")
 	
-	train, test = split_corpus("EANC.golds.txt")
-	trigrams_to_f = count_trigrams(test)
+	#train, test = split_corpus("EANC.golds.txt")
+	#trigrams_to_f = count_trigrams(test)
 
-	momma.forget(trigrams_to_f)
+	#momma.forget(trigrams_to_f)
 
 
 	
