@@ -123,17 +123,17 @@ class mommaTagger:
 			for l in rf:
 				i += 1
 				l = l.rstrip().rsplit("\t")
-				for i in range(2, len(l)):
+				for k in range(2, len(l)):
 					j += 1
 					# get the tag 2 ago, 1 ago and current
 					# probably a better way to do this, rather than re-calc every time....
-					laster_tag = split_tagged_lemma(l[i-2])[1]
+					laster_tag = split_tagged_lemma(l[k-2])[1]
 					all_tags.add(laster_tag)
 					
-					last_tag = split_tagged_lemma(l[i-1])[1]
+					last_tag = split_tagged_lemma(l[k-1])[1]
 					all_tags.add(last_tag)
 					
-					tag = split_tagged_lemma(l[i])[1]
+					tag = split_tagged_lemma(l[k])[1]
 					all_tags.add(tag)
 
 					tg = (laster_tag, last_tag, tag)
@@ -182,7 +182,7 @@ class mommaTagger:
 if __name__ == "__main__":
 	#momma = mommaTagger("tagged.wiki.txt")
 	
-	momma = mommaTagger("EANC.200.hand.txt", tagged_c_type = 2)
+	#momma = mommaTagger("EANC.200.hand.txt", tagged_c_type = 2)
 	#c_save(momma, "taggers/m_tagger.t")
 	#momma = c_load("taggers/m_tagger.t")
 	
