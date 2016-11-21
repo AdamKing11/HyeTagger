@@ -1,7 +1,6 @@
 import re, sys, random
 
-from lib.word_features import *
-
+from lib.general import *
 
 def split_corpus(corpus_file, ratio = .75, shuf = True):
 	"""
@@ -142,7 +141,8 @@ def count_trigrams(c, verbose=True):
 
 	return trigrams
 
-def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., verbose = True):
+def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., \
+	verbose = True, max_guesses = 5):
 	"""
 	takes a list of sentences and compares their tags
 	"""
@@ -162,7 +162,7 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., ver
 		s = [split_tagged_lemma(w)[0] for w in s]
 		
 		guess, g_info = tagger.tag(s, morph_weight = morph_weight, \
-			syn_weight = syn_weight)
+			syn_weight = syn_weight, mc = max_guesses)
 		
 		all_words += len(s)
 		all_guesses += len(g_info)
