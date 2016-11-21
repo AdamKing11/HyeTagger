@@ -23,6 +23,7 @@ from random import shuffle
 from lib.word_features import *
 from lib.bclass_cross import *
 from lib.test_eval import *
+from lib.general import *
 from babyTagger import *
 from mommaTagger import *
 
@@ -56,7 +57,7 @@ class daddyTagger:
 		print("\tTrigram types:", len(self.mommaTagger.mid_prob))
 		print("\tTotal trigrams:", self.mommaTagger.total_trigrams)
 
-	def tag(self, s, threshold = 1., fc = True, morph_weight = 1., syn_weight = 1.):
+	def tag(self, s, threshold = 1., fc = True, morph_weight = 1., syn_weight = 1., mc = 4):
 		"""
 			Tag a sentence! (duh)
 			We first go through and find all unambiguous words in the sentence
@@ -65,6 +66,11 @@ class daddyTagger:
 			then we do the same for totally novel words
 		"""
 		
+		# if we've been passed a 'morph_weight' of 0, then we consider ALL tags for all words
+		# EXCEPT the "closed" tag types - PUNC, N/A, START, END
+		if morph_weight == 0:
+			mc = len(self.mommaTagger.all_tags)-4
+			
 		# get rid of any blank words we may have been given....
 		s = [w for w in s if w != ""]
 		# build an empty list of length s
@@ -114,7 +120,7 @@ class daddyTagger:
 				# guess is right
 				
 				gap_guesses = self.gap_fill(gap, morph_weight = morph_weight, \
-					syn_weight = syn_weight)
+					syn_weight = syn_weight, mc = mc)
 				j = start_gap + 1
 				for g in gap_guesses:
 					# fill in our sequence of tags with the winner for this word
@@ -127,7 +133,7 @@ class daddyTagger:
 
 		return tagged, guess_info
 
-	def gap_fill(self, s, morph_weight = 1., syn_weight = 1.):
+	def gap_fill(self, s, morph_weight = 1., syn_weight = 1., mc = 5):
 		"""
 		a means of finding the best fit of tags for an unknown sequence
 		we start with KNOWING the first and last word/tag pair (but we could always do
@@ -136,12 +142,14 @@ class daddyTagger:
 
 		we do this via the product of the probability of a tag|word (from the morphological
 		Bayesian classifier) and the SUM over all tag trigrams that COULD make up a tag sequence
+		
+		'mc' for maximum tag candidates we allow per word
 		"""
+
 		first_tag = self.babyTagger.quick_tag(s[0])[2][1]
 		final_tag = self.babyTagger.quick_tag(s[-1])[2][1]
 		
-		mc = 4		# for maximum candidates, ie how many possible pos labels we allow per token
-
+		
 		# dictionary for storing the probability a given word has a particular tag
 		# because we're going to be copying some tags for a given word, this will be 1/3
 		# for ambiguous and unambiguous tokens to indicate that any tag is possible
@@ -153,13 +161,13 @@ class daddyTagger:
 		for i in range(len(s)):
 			w = s[i]
 			
-			pos_tags = self.babyTagger.quick_tag(w)[2]
+			pos_tags = self.babyTagger.quick_tag(w, max_guess=mc)[2]
 			probs = [pos_tags[k] for k in np.arange(0,len(pos_tags),2)]
 			tags = [pos_tags[k] for k in np.arange(1,len(pos_tags),2)]
 
 			if len(tags) == 1:	
 				# if it's an unambigous word, ie the first and last
-				# we just copy the SINGLE tag 3 times
+				# we just copy the SINGLE tag multiple times
 				tag_matrix.append([tags[0] for _ in range(mc)])
 				word_tag_dict[(w, tags[0])] = 1./mc
 			elif len(tags) == 2:
@@ -184,7 +192,9 @@ class daddyTagger:
 
 		for i in range(1,len(s)-1):
 			w = s[i]
-			# get all possible tags for previous and following 
+			# get all possible tags for previous and following
+			# and by all possible, I mean, all the tags that the other classifiers have possibly
+			# assigned to the previous and following words 
 			pos_prev = tag_matrix[i-1]
 			pos_next = tag_matrix[i+1]
 			pos_contexts = [(p, n) for p in pos_prev for n in pos_next]
@@ -205,18 +215,28 @@ class daddyTagger:
 				em = word_tag_dict[(w,tag)]
 				##### changing from product to SUM
 				# with the SUM, we can set either weight to 0 and still use the other....
+				# because we normalize it for each word, doesn't matter the total value, just
+				# relative for each tag
 				prob_matrix[i,j] = (em * morph_weight) + (tr * syn_weight)
-
-			# now we normalize the probs...
+				# now we normalize the probs...
 			for j in range(mc):
-				prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i,].sum() 
-			#	pass
-
+				# make sure we've assigned at least SOME probability to one of the tags...
+				if prob_matrix[i,].sum() > 0:
+					prob_matrix[i,j] = prob_matrix[i,j] / prob_matrix[i,].sum()
+				# if no tag has ANY probability, then 1) we have a 0 count for the 
+				# trigrams AND the morphological probability is 0.... pick a random 
+				# tag and give it some prob
+				else:
+					rand_tag = np.random.randint(mc)
+					# we want to show that we just guessed randomly, low confidence
+					prob_matrix[i,rand_tag] = 1/mc
+					
+				
 		gap_guess = []
 		for i in range(1,len(s)-1):
-			guess_index = np.argmax(prob_matrix[i])
-			reg_confidence = prob_matrix[i,guess_index] / prob_matrix[i,].sum()
-			gap_guess.append((tag_matrix[i][guess_index], reg_confidence))
+			guess_index = np.argmax(prob_matrix[i,])
+			confidence = prob_matrix[i,guess_index]
+			gap_guess.append((tag_matrix[i][guess_index], confidence))
 		
 		return gap_guess
 
@@ -342,4 +362,4 @@ if __name__ == "__main__":
 	new_daddy.say_hello()
 
 	# now, let's try and tag the sentences in 'test'
-	score_tagger(test, new_daddy, morph_weight = 0, syn_weight = 1, verbose=False)
+	score_tagger(test, new_daddy, morph_weight = 1, syn_weight = 1, verbose=False)
