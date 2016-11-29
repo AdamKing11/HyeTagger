@@ -24,7 +24,29 @@ def split_corpus(corpus_file, ratio = .75, shuf = True):
 	train = whole_corpus[:train_len]
 	test = whole_corpus[train_len:]
 	return train, test
-	
+
+def read_untagged_corpus(c, fc=True, verbose = True):
+	"""
+	reads in a corpus where words are separated by " "
+	just like the other function, but no tags
+	"""
+	unigrams = {}
+	i = 0
+	with open(c, "r") as rf:
+		for line in rf:
+			i+=1
+			if verbose:
+				print("Reading in line", i, end="\r")
+			line = line.rstrip().rsplit(" ")
+			for w in line:
+				if fc:
+					w = w.lower()
+				if w in unigrams:
+					unigrams[w] += 1 
+				else:
+					unigrams[w] = 1
+	return unigrams
+
 def read_corpus(corpus_file, shuf = True):
 	"""
 	reads in a corpus file where each sentence is on its own line and
@@ -183,4 +205,50 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., \
 		print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
 
 	return ((all_words - wrong)/all_words)
+
+def semisupervised_baby_training(word_list, baby, iterations = 3, threshold = .99, verbose = True):
+	"""
+	goes through the 'word_list' and tests all words with the 'baby' babyTagger
+	for all words that beat the 'threshold', we add it to the list of **unambiguous** 
+	tokens in the babyTagger and retrain
+	"""
+
+	# copy the baby tagger
+	new_baby = baby
+	if verbose:
+		print("Going to look through", len(word_list), "to find words that", end = " ")
+		print("score higher than", threshold, "and add them to the classifier.")
+	# loop through the iterations
+	for i in range(iterations):
+		high_scores = {}
+		
+		if verbose:
+			print("Iteration", i+1)
+			print(len(word_list), "words to check.")
+			j = 0
+		for w in word_list:
+			
+			if verbose:
+				j+=1
+				print("Checking word ::", j, end="\r")
+			# tag the word using the tagger 
+			tag_guess = new_baby.quick_tag(w)
+			# if it's not in the lexicon already AND it's score beats our threshold
+			# add it to the list
+			if tag_guess[0] == 3 and tag_guess[2][0] >= threshold:
+				word = tag_guess[1]
+				tag = tag_guess[2][1]
+				high_scores[word] = word + "_" + tag
+		print("\nFound", len(high_scores), "words to add.")
+		# if we found no words to add, just exit
+		if len(high_scores) == 0:
+			break
+		# add those high scoring words to the unambiguous list and retrain
+		new_baby.remember(unambig_to_r = high_scores)
+		# now, delete the words from the list and continue the loop
+		for w in high_scores:
+			del words[w]
+
+	return new_baby
+
 			 
