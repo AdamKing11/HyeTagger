@@ -1,4 +1,5 @@
 import re, sys, random
+import numpy as np
 
 from lib.general import *
 
@@ -45,6 +46,8 @@ def read_untagged_corpus(c, fc=True, verbose = True):
 					unigrams[w] += 1 
 				else:
 					unigrams[w] = 1
+	if verbose:
+		print()
 	return unigrams
 
 def read_corpus(corpus_file, shuf = True):
@@ -204,9 +207,11 @@ def score_tagger(gold_sentences, tagger, morph_weight = 1., syn_weight = 1., \
 		print(len(wrong_types), "out of", len(all_types), "wrong word types. (%.3f)" % (1-(len(wrong_types)/len(all_types))))
 		print((all_words - wrong), "out of", all_words, "right. (%.3f)" % ((all_words - wrong)/all_words))
 
+	# return the total accuracy
 	return ((all_words - wrong)/all_words)
 
-def semisupervised_baby_training(word_list, baby, iterations = 3, threshold = .99, verbose = True):
+def semisupervised_baby_training(word_list, baby, iterations = 3, threshold = .99, verbose = True, \
+	folds = 6):
 	"""
 	goes through the 'word_list' and tests all words with the 'baby' babyTagger
 	for all words that beat the 'threshold', we add it to the list of **unambiguous** 
@@ -218,16 +223,22 @@ def semisupervised_baby_training(word_list, baby, iterations = 3, threshold = .9
 	if verbose:
 		print("Going to look through", len(word_list), "to find words that", end = " ")
 		print("score higher than", threshold, "and add them to the classifier.")
+	
+	
+	if new_baby.accuracy == 1:
+		new_baby.test_baby_classifier(folds, verbose = verbose)
+
+	# we're going to get the accuracy of the original classifier
+	# so we know how to 
+	original_accuracy = new_baby.accuracy
 	# loop through the iterations
 	for i in range(iterations):
 		high_scores = {}
-		
 		if verbose:
-			print("Iteration", i+1)
-			print(len(word_list), "words to check.")
+			print("\nIteration", i+1)
+			print("\t", len(word_list), "words to check.")
 			j = 0
 		for w in word_list:
-			
 			if verbose:
 				j+=1
 				print("Checking word ::", j, end="\r")
@@ -235,20 +246,50 @@ def semisupervised_baby_training(word_list, baby, iterations = 3, threshold = .9
 			tag_guess = new_baby.quick_tag(w)
 			# if it's not in the lexicon already AND it's score beats our threshold
 			# add it to the list
+
+				
 			if tag_guess[0] == 3 and tag_guess[2][0] >= threshold:
 				word = tag_guess[1]
 				tag = tag_guess[2][1]
 				high_scores[word] = word + "_" + tag
-		print("\nFound", len(high_scores), "words to add.")
+				
 		# if we found no words to add, just exit
 		if len(high_scores) == 0:
+			if verbose:
+				print()
+				print("No new words found to add. Ending training.")
 			break
+		
+		# now that we have the high-scoring words, we delete them from the orginal list
+		# (to avoide adding them again and again) AND we use a random number to determine
+		# if we really want to add them, based on the accuracy of the tagger
+		# that is, if accuracy of the tagger is 90%, we add 90% of the words
+		# if it's 50%, we only add 50%, etc
+		if verbose:
+			print()
+			print("Found", len(high_scores), "words to add.")
+			#print("Tagger accuracy:", new_baby.accuracy)
+			#print("Removing words according to accuracy....")
+			j = 0
+
+		# go through all the high scoring words and generate a randome number 0-1
+		# if the number is LESS than the accuracy, keep
+		# this way, we don't add too many words to an already bad classifer
+		high_score_to_delete = {}
+		for w in high_scores:
+			del word_list[w]
+			keep = np.random.random()
+			if keep >= original_accuracy:
+				j+=1
+				high_score_to_delete[w] = 1
+
+		for w in high_score_to_delete:
+			del high_scores[w]
+		if verbose:
+			print("Randomly removed", j, "words leaving us with", len(high_scores))
+
 		# add those high scoring words to the unambiguous list and retrain
 		new_baby.remember(unambig_to_r = high_scores)
-		# now, delete the words from the list and continue the loop
-		for w in high_scores:
-			del words[w]
-
 	return new_baby
 
 			 
