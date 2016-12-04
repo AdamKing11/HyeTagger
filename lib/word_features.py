@@ -2,6 +2,18 @@ import re, sys, pickle
 
 from lib import *
 
+def armConst(c):
+    """
+    returns true if it is an Armenian consonant
+    """    
+    return bool(re.search("[ԲԳԴԶԹԺԼԽԾԿՀՁՂՃՄՅՆՇՉՊՋՌՍՎՏՐՑՒՓՔՖ]", c.upper()))
+
+def armVowel(c):
+    """
+    returns true if it is an Armenian vowel
+    """
+    return bool(re.search("[ԱԵԸԻՈՒՕ]", c.upper()))
+
 
 def addFeatures(token, lemma):
     """
@@ -25,16 +37,16 @@ def addFeatures(token, lemma):
     feat['has-numeral'] = bool(re.search("[0-9]",w))
     
     # ratio of numerals to other stuff, trying to make sure we catch numbers...
-    try:
-        feat['numeral-ratio'] = len(re.findall("[0-9]",w))/len(w)
-    except:
-        feat['numeral-ratio'] = 0
+    #try:
+    feat['numeral-ratio'] = len(re.findall("[0-9]",w))/len(w)
+    #except:
+        #feat['numeral-ratio'] = 0
         
     # if there is some punctuation in it, prob a punctuation mark...
     feat['has-punc'] = bool(re.search("[«»՞–—ՙ՚՛՜՝՟]",w))
 
     # get length
-    feat['length'] = len(w)    
+    #feat['length'] = len(w)    
     
     # get first letters
     feat['first-1'] = lw[0]
@@ -53,8 +65,8 @@ def addFeatures(token, lemma):
         suffix = ''
         root = token
 
-    feat['suffix'] = suffix
-    feat['root'] = root
+    #feat['suffix'] = suffix
+    #feat['root'] = root
 
     # get final letters
     feat['final-1'] = lw[-1]
@@ -70,7 +82,7 @@ def addFeatures(token, lemma):
     # might have some effect....
     feat['vowel-initial'] = armVowel(bw[0])
 
-    # չ
+    # if there's a չ at the begining, possibly a negative verb
     feat['initial-neg'] = bool(re.search("^չ", lw))
 
     # if final character is either ն or ը, it might be the nom/acc marking
@@ -100,15 +112,4 @@ def addFeatures(token, lemma):
     # return the DICTIONARY of features and their values
     return feat
 
-def armConst(c):
-    """
-    returns true if it is an Armenian consonant
-    """    
-    return bool(re.search("[ԲԳԴԶԹԺԼԽԾԿՀՁՂՃՄՅՆՇՉՊՋՌՍՎՏՐՑՒՓՔՖ]", c.upper()))
-
-def armVowel(c):
-    """
-    returns true if it is an Armenian vowel
-    """
-    return bool(re.search("[ԱԵԸԻՈՒՕ]", c.upper()))
 
