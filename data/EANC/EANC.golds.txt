@@ -1,0 +1,83 @@
+<s>_START	հետո_ADV	ասում_V	է_V	։_PUNC	</s>_END
+<s>_START	մտել_V	է_V	գաղափարական_A	անտառ_N	։_PUNC	</s>_END
+<s>_START	ժողկրթբաժինների_N	դպրոցների_N	դիրեկտորների_N	կարևոր_A	խնդիրն_N	է_V	լրջորեն_ADV	նախապատրաստվել_V	ու_CONJ	բովանդակալից_A	անցկացնել_V	այդ_PRON	խորհրդակցությունները_N	։_PUNC	</s>_END
+<s>_START	՛_PUNC	էդպես_PRON	է_V	։_PUNC	</s>_END
+<s>_START	էդպես_PRON	է_V	աշխարհի_N	կարգը_N	։_PUNC	</s>_END
+<s>_START	էլի_ADV	փքվում_V	է_V	ու_CONJ	՞_PUNC	տրաքում_V	։_PUNC	</s>_END
+<s>_START	հողը_N	գծագիր_N	է_V	ստանում_V	հենց_ADV	այնտեղ_A	։_PUNC	</s>_END
+<s>_START	էնտեղի_PRON	ժանդարմը_N	լավն_A	է_V	ուզածդ_V	մարդուն_N	կթողնի_V	գեղի_N	միջով_POST	անցնի_V	։_PUNC	</s>_END
+<s>_START	և_CONJ	հողը_N	շնչահեղձ_A	է_V	լինում_V	։_PUNC	</s>_END
+<s>_START	ասում_V	է_V	ձանձրալի_A	։_PUNC	</s>_END
+<s>_START	և_CONJ	կապանքներ_N	դիր_V	քո_PRON	լեզվին_N	։_PUNC	</s>_END
+<s>_START	փտող_V	դարձվածք_N	փտող_V	հոգի_N	և_CONJ	սարսափներ_N	։_PUNC	</s>_END
+<s>_START	գիւտի_N	առաջ_POST	որը_PRON	և_CONJ	անմահացրեց_V	նրա_PRON	անունը_N	։_PUNC	</s>_END
+<s>_START	խաղեր_N	և_CONJ	մտրակ_N	։_PUNC	</s>_END
+<s>_START	՛_PUNC	ոլոր_A	քաղաքացիները_N	հավասար_A	են_V	օրենքի_N	առջև_POST	ուստի_CONJ	բոլորին_A	հավասարաչափ_A	թույլատրվում_V	է_V	զբաղեցնել_V	հանրային_A	պաշտոններ_N	դիրքեր_N	համապատասխան_A	իրենց_PRON	ընդունակություններին_N	և_CONJ	առանց_PREP	որևէ_PRON	տարբերությունների_N	բացառությամբ_N	այն_PRON	տարբերությունների_N	որոնք_PRON	պայմանավորված_V	են_V	նրանց_PRON	առաքինություններով_N	և_CONJ	ձիրքերով_N	։_PUNC	</s>_END
+<s>_START	ապահովել_V	փաստաթղթերի_N	տեղափոխումը_N	և_CONJ	սահմանված_V	կարգով_N	դրանց_PRON	հանձնումը_N	պետական_A	արխիվ_N	։_PUNC	</s>_END
+<s>_START	իրականացնել_V	օրենքով_N	և_CONJ	այլ_PRON	իրավական_A	ակտերով_N	սահմանված_V	այլ_PRON	լիազորություններ_N	։_PUNC	</s>_END
+<s>_START	վաղաժամ_A	մահվան_N	առթիվ_POST	և_CONJ	ցավակցում_V	է_V	հանգուցյալի_A	ընտանիքին_N	։_PUNC	</s>_END
+<s>_START	և_CONJ	թարմ_A	գերեզմանոցներ_N	կան_V	եռագլուխ_A	։_PUNC	</s>_END
+<s>_START	և_CONJ	րոպեների_N	հալչող_V	փոքրացող_V	գերեզմանաթմբերը_N	։_PUNC	</s>_END
+<s>_START	և_CONJ	մեքսիկական_A	գիշերը_N	հյուսված_V	է_V	։_PUNC	</s>_END
+<s>_START	և_CONJ	մտքի_N	գույնով_N	։_PUNC	</s>_END
+<s>_START	ա_V	պատվիրատուի_N	անվանումը_N	և_CONJ	գտնվելու_V	վայրը_N	։_PUNC	</s>_END
+<s>_START	ու_CONJ	պատիվ_N	։_PUNC	</s>_END
+<s>_START	համեմել_V	դեղնուցով_N	ու_CONJ	կաթով_N	։_PUNC	</s>_END
+<s>_START	քարավան_N	ու_CONJ	ափ_N	։_PUNC	</s>_END
+<s>_START	ծաղիկ_N	թուփ_N	ու_CONJ	ծառ_N	ու_CONJ	պտուղները_N	բոլոր_A	։_PUNC	</s>_END
+<s>_START	ու_CONJ	հենց_ADV	այդ_PRON	պահին_N	լսվեց_V	բարձր_A	ձայն_N	։_PUNC	</s>_END
+<s>_START	՞_PUNC	ճիշտ_A	է_V	այդ_PRON	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	պայքարել_V	արյուն_N	է_V	թափել_V	այդ_PRON	էր_V	ճշմարիտ_A	ուղին_N	։_PUNC	</s>_END
+<s>_START	այդ_PRON	քաղաքի_N	համալսարանական_A	ձյունը_N	։_PUNC	</s>_END
+<s>_START	նրա_PRON	՛_PUNC	ձեռքը_N	հենց_ADV	այդ_PRON	՜_PUNC	ձեռքը_N	բռնեց_V	ու_CONJ	սկսեց_V	համբուրել_V	։_PUNC	</s>_END
+<s>_START	տեսնեմ_V	այդ_PRON	մայրական_A	զարմացքը_N	ուրիշ_PRON	պոչ_N	էլ_PART	՞_PUNC	ունի_V	թե_CONJ	ոչ_PART	այդ_PRON	ասա_V	։_PUNC	</s>_END
+<s>_START	նրա_PRON	կյանքի_N	պայմանն_N	էր_V	այդ_PRON	։_PUNC	</s>_END
+<s>_START	է_V	ինչ_PRON	կհրամայեք_V	վերցնենք_V	ու_CONJ	բոլորին_A	էլ_PART	գործից_N	՞_PUNC	հեռացնենք_V	։_PUNC	</s>_END
+<s>_START	էլ_PART	ճար_N	չկար_V	։_PUNC	</s>_END
+<s>_START	ոչ_PART	էլ_PART	փույթն_N	ունեին_V	լքված_V	դեսպանների_N	։_PUNC	</s>_END
+<s>_START	նրանք_PRON	էլ_PART	լուռ_A	վերցնելով_V	վեհի_A	աջը_A	տեղավորվեցին_V	աթոռակներին_N	։_PUNC	</s>_END
+<s>_START	էլ_PART	ուժ_N	չունեմ_V	։_PUNC	</s>_END
+<s>_START	ճամփան_N	էլ_PART	միտքդ_N	պահիր_V	։_PUNC	</s>_END
+<s>_START	էլ_PART	ոչինչ_PRON	չէր_V	ցանկանում_V	պատմել_V	։_PUNC	</s>_END
+<s>_START	էլ_PART	չեմ_V	խենթանա_V	սիրո_N	վայելքից_N	։_PUNC	</s>_END
+<s>_START	էգուց_ADV	տասը_NUM	ոչխար_N	եմ_V	տանելու_V	որտեղ_PRON	տասը_NUM	էնտեղ_PRON	էլ_PART	տասն_NUM	և_CONJ	մեկը_NUM	։_PUNC	</s>_END
+<s>_START	էսպես_PRON	էլ_PART	գնանք_V	էլի_ADV	։_PUNC	</s>_END
+<s>_START	էլ_PART	չես_V	դառնա_V	տուն_N	։_PUNC	</s>_END
+<s>_START	և_CONJ	մեկ_NUM	էլ_PART	գորշ_A	թերթերի_N	էջերին_N	։_PUNC	</s>_END
+<s>_START	ջուրն_N	էլ_PART	թանկացավ_V	։_PUNC	</s>_END
+<s>_START	որն_PRON	այնուհետև_ADV	որքան_PRON	էլ_PART	ցավեմ_V	։_PUNC	</s>_END
+<s>_START	ինչ-որ_PRON	մեկի_NUM	ահաբեկչի_N	թե_CONJ	դևերի_N	։_PUNC	</s>_END
+<s>_START	ձեզ_PRON	կտամ_V	թե_CONJ	քիթ_N	թե_CONJ	դեմք_N	։_PUNC	</s>_END
+<s>_START	էնպես_PRON	գիտում_V	էր_V	թե_CONJ	՛_PUNC	էն_PRON	կյանքիցն_N	ա_V	վեր_ADV	էկել_V	։_PUNC	</s>_END
+<s>_START	բառը_N	հավասարապես_ADV	գործածվում_V	է_V	՛_PUNC	թե_CONJ	չեզոք_A	՛_PUNC	թե_CONJ	խոսակցական_A	թե_CONJ	գրքային_A	ոճում_N	։_PUNC	</s>_END
+<s>_START	թե_CONJ	ընտրել_V	՜_PUNC	գալիքը_N	։_PUNC	</s>_END
+<s>_START	ժողովրդին_N	ու_CONJ	պետությանը_N	՞_PUNC	ինչ_PRON	օգուտ_N	թե_CONJ	միլիոնները_NUM	վեր_ADV	են_V	ածվում_V	անշունչ_A	արժեքների_N	։_PUNC	</s>_END
+<s>_START	թե_CONJ	ընտրել_V	՜_PUNC	գալիքը_N	։_PUNC	</s>_END
+<s>_START	ահա_PART	թե_CONJ	ինչու_PRON	։_PUNC	</s>_END
+<s>_START	ձեզ_PRON	կտամ_V	թե_CONJ	քիթ_N	թե_CONJ	դեմք_N	։_PUNC	</s>_END
+<s>_START	ինչ-որ_PRON	մեկի_NUM	ահաբեկչի_N	թե_CONJ	դևերի_N	։_PUNC	</s>_END
+<s>_START	նետել_V	թե_CONJ	ոչ_PART	։_PUNC	</s>_END
+<s>_START	էնպես_PRON	գիտում_V	էր_V	թե_CONJ	՛_PUNC	էն_PRON	կյանքիցն_N	ա_V	վեր_ADV	էկել_V	։_PUNC	</s>_END
+<s>_START	շատ_A	ենք_V	թե_CONJ	քիչ_N	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	նույն_A	հռետորությամբ_N	քողարկված_V	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	առայժմ_ADV	չեն_V	գտնված_V	մեծ_A	երկեր_N	բայց_CONJ	այն_PRON	ինչ_PRON	հավաքված_V	է_V	արժանի_A	է_V	հատուկ_A	ուշադրության_N	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	սեփական_A	արտադրանքի_N	տեսակարար_A	կշիռը_N	բարձրացել_V	է_V	բայց_CONJ	ապրանքաշրջանառության_N	պլանները_N	թերակատարվում_V	են_V	։_PUNC	</s>_END
+<s>_START	հույս_N	չկա_V	բայց_CONJ	հիմա_ADV	լեռների_N	լույսն_N	է_V	իրական_A	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	մտած_V	ում_PRON	է_V	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	բուժումը_N	երկար_A	տևեց_V	բայց_CONJ	լավանում_V	է_V	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	փոխարենը_POST	սեր_N	տեսնում_V	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	քեզնից_PRON	երբեք_ADV	սեր_N	չեմ_V	տեսել_V	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	պաշտպանության_N	դեպքում_N	հնարավոր_A	է_V	իմ_PRON	գրոհը_N	չեզոքացվի_V	բայց_CONJ	ոչ_PART	ավելին_N	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	դրանից_PRON	լենը_A	չի_V	լինում_V	։_PUNC	</s>_END
+<s>_START	խի_PRON	բայց_CONJ	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	որոնց_PRON	փույթը_N	չունի_V	ոչ_PART	ոք_PRON	։_PUNC	</s>_END
+<s>_START	քո_PRON	հրաշալի_A	բայց_CONJ	օրեցօր_ADV	հանգչող_V	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	զգալի_A	ուշացումով_N	բայց_CONJ	խոստումս_N	կատարեցի_V	։_PUNC	</s>_END
+<s>_START	բայց_CONJ	քաղաքը_N	վերցրին_V	և_CONJ	լեհական_A	ջարդված_V	զորքի_N	մնացորդները_N	փախան_V	։_PUNC	</s>_END
+<s>_START	չափից_N	շատ_A	փող_N	։_PUNC	</s>_END
+<s>_START	էկա_V	տեսա_V	շատ_A	քիչ_N	հոտ_N	ա_V	։_PUNC	</s>_END
+<s>_START	շատ_A	այցելեց_V	։_PUNC	</s>_END
+<s>_START	ճիշտ_A	է_V	ասված_V	որքան_PRON	շատ_A	ճշմարտության_N	այնքան_PRON	շատ_A	հավատ_N	։_PUNC	</s>_END
+<s>_START	դեպք_N	պատահի_V	շատ_A	ուժեղ_A	արյուն_N	կկորցնի_V	։_PUNC	</s>_END
+<s>_START	դա_PRON	շատ_A	վտանգավոր_A	է_V	։_PUNC	</s>_END
+<s>_START	անգլիացիները_N	շատ_A	խիստ_A	են_V	։_PUNC	</s>_END
