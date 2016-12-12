@@ -1,6 +1,4 @@
-import re, sys, pickle
-
-from lib import *
+import re
 
 def armConst(c):
     """
@@ -107,7 +105,7 @@ def addFeatures(token, lemma):
     feat['verb-part-suf'] = bool(re.search("ած$", lw))
 
     # if word has the sequence եց or աց, prob a causitive verb
-    feat['causitive'] = bool(re.search("[աե]ց",lw))
+    feat['causitive'] = bool(re.search("[աե]ց",lw[-4:]))
     
     # return the DICTIONARY of features and their values
     return feat
