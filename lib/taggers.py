@@ -13,7 +13,6 @@ Armenian language text
 
 from lib.general import *
 from lib.word_features import *
-from lib.bclass_cross import *
 from lib.test_eval import *
 
 
